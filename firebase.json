@@ -1,0 +1,37 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "conectasaudepi",
+          "appId": "1:906552271889:android:8f14b5667e57a39ea17db0",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "conectasaudepi",
+          "configurations": {
+            "android": "1:906552271889:android:8f14b5667e57a39ea17db0",
+            "ios": "1:906552271889:ios:18007f8c0ec45daea17db0",
+            "web": "1:906552271889:web:99710155965efd74a17db0"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

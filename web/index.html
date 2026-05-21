@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="google-signin-client_id" content="906552271889-oj1aeghngfcu0i7arf29nvooqgmg4nci.apps.googleusercontent.com">
+
+  <base href="$FLUTTER_BASE_HREF">
+
+  <script>
+    const CONFIG = {
+      app:        "ConectaSaúdePI",
+      slogan:     "Sua saúde conectada.",
+      faviconPath: "favicon.png",
+      frases: [
+        "Conectando unidades...",
+        "Carregando escalas...",
+        "Sincronizando filas...",
+        "Preparando painel...",
+        "Quase pronto..."
+      ],
+      versao: "v1.0.0 • MVP Hackathon"
+    };
+  </script>
+
+  <title>ConectaSaúdePI</title>
+  <meta name="description" content="Plataforma de gestão de saúde pública municipal">
+  <meta name="theme-color" content="#061030">
+
+  <meta property="og:title"        content="ConectaSaúdePI">
+  <meta property="og:description"  content="Sua saúde conectada.">
+  <meta property="og:type"         content="website">
+  <meta property="og:image"        content="https://i.ibb.co/Y4ZdPHwM/Conecta-Saude-PI.jpg">
+  <meta property="og:image:width"  content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="ConectaSaúdePI">
+  <meta name="twitter:description" content="Sua saúde conectada.">
+  <meta name="twitter:image"       content="https://i.ibb.co/Y4ZdPHwM/Conecta-Saude-PI.jpg">
+
+  <link rel="manifest"         href="manifest.json">
+  <link rel="icon"             type="image/png" href="favicon.png" id="favicon">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="preconnect"       href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy-deep:  #061030;   /* igual a AppColors.navyDeep */
+      --navy-mid:   #0D2B6B;   /* igual a AppColors.bgMid */
+      --blue-brand: #1A72FF;   /* igual a AppColors.primaryDeep */
+      --blue-light: #4A9FFF;   /* igual a AppColors.primary (blueLt) */
+      --blue-soft:  #8CC6FF;   /* destaque secundário */
+      --blue-ice:   #E6F1FF;   /* texto claro (conecta) */
+      --green-lt:   #00D4AA;   /* igual a AppColors.accent (greenLt) */
+
+      --grad-main: linear-gradient(135deg, var(--navy-deep) 0%, var(--blue-brand) 100%);
+      --grad-icon: linear-gradient(135deg, var(--navy-mid)  0%, var(--blue-brand) 100%);
+      --grad-bar:  linear-gradient(90deg,  var(--blue-brand), var(--blue-light));
+    }
+
+    body {
+      background: var(--navy-deep);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      visibility: hidden;
+      font-family: 'Poppins', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body.ready { visibility: visible; }
+
+    /* ── LOADER ───────────────────────────────────────── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--navy-deep);
+      z-index: 9999;
+      transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .bg-soft {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 65% at 50% 35%,
+          rgba(21,101,219,0.22) 0%, transparent 65%),
+        radial-gradient(ellipse 55% 45% at 90% 90%,
+          rgba(76,163,255,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 45% 38% at 10% 14%,
+          rgba(13,43,92,0.55) 0%, transparent 65%),
+        radial-gradient(ellipse 38% 30% at 85% 10%,
+          rgba(21,101,219,0.08) 0%, transparent 55%);
+      pointer-events: none;
+    }
+
+    .bg-dots {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(
+        circle, rgba(140,198,255,0.07) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      mask-image: radial-gradient(
+        ellipse 80% 70% at 50% 50%,
+        black 0%, transparent 100%);
+      -webkit-mask-image: radial-gradient(
+        ellipse 80% 70% at 50% 50%,
+        black 0%, transparent 100%);
+    }
+
+    .top-line {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--grad-bar);
+      z-index: 20;
+      box-shadow: 0 0 18px rgba(76,163,255,0.45);
+    }
+
+    .ecg-bg {
+      position: absolute;
+      bottom: 15%;
+      left: 0; right: 0;
+      height: 60px;
+      pointer-events: none;
+      opacity: 0.06;
+      overflow: visible;
+    }
+    .ecg-bg polyline {
+      stroke: var(--blue-soft);
+      stroke-width: 1.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 700;
+      stroke-dashoffset: 700;
+      animation: ecg-draw 3s ease forwards 1.4s;
+    }
+    @keyframes ecg-draw {
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* ── CONTEÚDO ─────────────────────────────────────── */
+    .loader-content {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      opacity: 0;
+      transform: translateY(20px) scale(0.96);
+      transition:
+        opacity  1s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .loader-content.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* ── LOGO AREA ────────────────────────────────────── */
+    .logo-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      animation: float-logo 5s ease-in-out infinite;
+    }
+
+    @keyframes float-logo {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-7px); }
+    }
+
+    /* ── ÍCONE ──────────────────────────────────────────── */
+    .logo-icon-wrap {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      flex-shrink: 0;
+    }
+
+    /* Glow atrás do ícone */
+    .logo-icon-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -20px;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(76,163,255,0.18) 0%,
+        rgba(21,101,219,0.10) 45%,
+        transparent 70%);
+      pointer-events: none;
+      animation: pulse-glow 2.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.7; transform: scale(1);   }
+      50%       { opacity: 1;   transform: scale(1.08); }
+    }
+
+    /* Anel externo girando */
+    .ring-outer {
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      border-top-color:  rgba(76,163,255,0.55);
+      border-right-color: rgba(140,198,255,0.30);
+      animation: spin-ring 3s linear infinite;
+    }
+
+    /* Anel interno girando ao contrário */
+    .ring-inner {
+      position: absolute;
+      inset: -24px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      border-bottom-color: rgba(21,101,219,0.25);
+      border-left-color:   rgba(76,163,255,0.18);
+      animation: spin-ring 6s linear infinite reverse;
+    }
+
+    @keyframes spin-ring { to { transform: rotate(360deg); } }
+
+    /* Caixa do ícone com imagem real */
+    .logo-box {
+      position: absolute;
+      inset: 0;
+      border-radius: 28px;
+      background: var(--grad-icon);
+      box-shadow:
+        0 16px 48px rgba(21,101,219,0.38),
+        0 4px  16px rgba(0,0,0,0.25),
+        0 0   0 1px rgba(76,163,255,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+      overflow: hidden;
+      animation: logo-box-pop 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) both 0.2s;
+    }
+
+    @keyframes logo-box-pop {
+      from { transform: scale(0.7); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    /* Reflexo no canto superior */
+    .logo-box::before {
+      content: '';
+      position: absolute;
+      top: -20px; left: -20px;
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.09);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Imagem do logo (pré-carregada, sem pisca) */
+    .logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 14px;
+      display: block;
+      position: relative;
+      z-index: 2;
+      /* entrada com scale + fade */
+      animation: icon-reveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both 0.5s;
+    }
+
+    @keyframes icon-reveal {
+      from { transform: scale(0.6) rotate(-8deg); opacity: 0; }
+      to   { transform: scale(1)   rotate(0deg);  opacity: 1; }
+    }
+
+    /* Pulsação do ícone */
+    .logo-box.pulse-box {
+      animation:
+        logo-box-pop 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) both 0.2s,
+        icon-pulse 3.5s ease-in-out infinite 1.2s;
+    }
+
+    @keyframes icon-pulse {
+      0%, 100% {
+        box-shadow:
+          0 16px 48px rgba(21,101,219,0.38),
+          0 4px  16px rgba(0,0,0,0.25),
+          0 0    0 1px rgba(76,163,255,0.18),
+          inset 0 1px 0 rgba(255,255,255,0.12);
+      }
+      50% {
+        box-shadow:
+          0 20px 60px rgba(21,101,219,0.55),
+          0 6px  22px rgba(0,0,0,0.28),
+          0 0    0 2px rgba(76,163,255,0.35),
+          inset 0 1px 0 rgba(255,255,255,0.18);
+      }
+    }
+
+    /* Dot de status (online) */
+    .status-dot {
+      position: absolute;
+      bottom: 8px; right: 8px;
+      width: 15px; height: 15px;
+      background: var(--blue-light);
+      border-radius: 50%;
+      border: 2.5px solid var(--navy-deep);
+      box-shadow: 0 0 10px rgba(76,163,255,0.7);
+      animation: blink-dot 2.2s ease-in-out infinite;
+      z-index: 5;
+    }
+
+    @keyframes blink-dot {
+      0%, 100% { box-shadow: 0 0 8px  rgba(76,163,255,0.55); }
+      50%       { box-shadow: 0 0 20px rgba(76,163,255,1);    }
+    }
+
+    /* ── TEXTO DA MARCA ─────────────────────────────────── */
+    .logo-text-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: text-slide-up 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both 0.7s;
+    }
+
+    @keyframes text-slide-up {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
+
+    .app-name-text {
+      font-size: 32px;
+      line-height: 1.0;
+      letter-spacing: -0.5px;
+    }
+
+    /* "Conecta" — fino, branco gelo */
+    .app-name-text .conecta {
+      font-weight: 300;
+      color: var(--blue-ice);
+    }
+
+    /* "Saúde" — bold, gradiente azul */
+    .app-name-text .saude {
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--blue-brand), var(--blue-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: var(--blue-light);
+    }
+
+    /* "PI" — bold, azul suave */
+    .app-name-text .pi {
+      font-weight: 800;
+      color: var(--blue-soft);
+    }
+
+    /* Slogan */
+    .app-tagline {
+      font-size: 9px;
+      font-weight: 600;
+      color: rgba(230,241,255,0.38);
+      letter-spacing: 2.8px;
+      text-transform: uppercase;
+      margin-top: 9px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(76,163,255,0.15);
+      white-space: nowrap;
+      animation: tagline-in 1s ease both 1.1s;
+    }
+
+    @keyframes tagline-in {
+      from { opacity: 0; letter-spacing: 6px; }
+      to   { opacity: 1; letter-spacing: 2.8px; }
+    }
+
+    /* ── PROGRESSO ────────────────────────────────────── */
+    .loader-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 52px;
+      opacity: 0;
+      transition: opacity 0.7s ease 0.5s;
+    }
+
+    .loader-controls.visible { opacity: 1; }
+
+    .progress-track {
+      width: 150px;
+      height: 2.5px;
+      border-radius: 4px;
+      background: rgba(76,163,255,0.12);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--grad-bar);
+      box-shadow: 0 0 8px rgba(76,163,255,0.5);
+      border-radius: 4px;
+      transition: width 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .progress-shimmer {
+      position: absolute;
+      top: 0; left: -50px;
+      width: 50px; height: 100%;
+      background: linear-gradient(90deg,
+        transparent, rgba(230,241,255,0.75), transparent);
+      animation: shimmer 1.8s infinite linear;
+    }
+
+    @keyframes shimmer { to { transform: translateX(230px); } }
+
+    .loader-label {
+      font-size: 9px;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: rgba(230,241,255,0.32);
+      height: 14px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .loader-label.fade {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+
+    .step-dots { display: flex; gap: 6px; }
+
+    .dot {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: rgba(76,163,255,0.18);
+      transition:
+        background  0.4s ease,
+        transform   0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        box-shadow  0.4s ease;
+    }
+
+    .dot.active {
+      background: var(--blue-light);
+      transform: scale(1.7);
+      box-shadow: 0 0 6px rgba(76,163,255,0.55);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    #loader-footer {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 1s ease 1.2s;
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    #loader-footer.visible { opacity: 1; }
+
+    .footer-pill {
+      display: flex;
+      align-items: center;
+      padding: 6px 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(76,163,255,0.18);
+      background: rgba(13,43,92,0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .footer-pill span {
+      font-size: 9px;
+      font-weight: 500;
+      color: rgba(230,241,255,0.32);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .footer-pill .sep {
+      margin: 0 8px;
+      color: rgba(76,163,255,0.25);
+    }
+
+    .footer-pill .hl {
+      color: var(--blue-light);
+      font-weight: 700;
+      opacity: 0.85;
+    }
+
+    .app-version {
+      font-size: 8px;
+      color: rgba(230,241,255,0.16);
+      letter-spacing: 2px;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loader">
+
+    <div class="bg-soft"></div>
+    <div class="bg-dots"></div>
+    <div class="top-line"></div>
+
+    <svg class="ecg-bg" viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <polyline points="
+        0,30 120,30 160,30 180,10 200,50 220,5 240,55 260,30 320,30
+        420,30 460,30 480,10 500,50 520,5 540,55 560,30 620,30
+        720,30 760,30 780,10 800,50 820,5 840,55 860,30 920,30
+        1020,30 1060,30 1080,10 1100,50 1120,5 1140,55 1160,30 1220,30
+        1320,30 1360,30 1380,10 1400,50 1420,5 1440,30
+      "/>
+    </svg>
+
+    <div class="loader-content" id="loader-content">
+
+      <div class="logo-area">
+
+        <div class="logo-icon-wrap">
+          <div class="ring-inner"></div>
+          <div class="ring-outer"></div>
+          <div class="logo-box pulse-box">
+            <img
+              class="logo-img"
+              src="icons/conectasaudepi/logo-var01.png"
+              alt="ConectaSaúdePI"
+              id="logo-image"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+            >
+            <svg style="display:none;width:100%;height:100%;padding:14px;" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="crossGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%"   stop-color="#4CA3FF"/>
+                  <stop offset="100%" stop-color="#1565DB"/>
+                </linearGradient>
+                <linearGradient id="personGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%"   stop-color="#E6F1FF"/>
+                  <stop offset="100%" stop-color="#8CC6FF"/>
+                </linearGradient>
+              </defs>
+              <rect x="19" y="35" width="58" height="26" rx="13" fill="url(#crossGrad)"/>
+              <rect x="35" y="19" width="26" height="58" rx="13" fill="url(#crossGrad)"/>
+              <circle cx="48" cy="31" r="7" fill="url(#personGrad)" opacity="0.95"/>
+              <path d="M34 58 Q36 44 48 42 Q60 44 62 58" fill="url(#personGrad)" opacity="0.90"/>
+              <path d="M38 52 L48 40 L58 52" fill="none" stroke="white" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
+            </svg>
+          </div>
+          <div class="status-dot"></div>
+        </div>
+
+        <div class="logo-text-group">
+          <div class="app-name-text">
+            <span class="conecta">Conecta</span><span class="saude">Saúde</span><span class="pi">PI</span>
+          </div>
+          <div class="app-tagline" id="app-tagline"></div>
+        </div>
+
+      </div>
+
+      <div class="loader-controls" id="loader-controls">
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+          <div class="progress-shimmer"></div>
+        </div>
+        <div class="loader-label" id="loader-label">Iniciando sistema</div>
+        <div class="step-dots" id="step-dots"></div>
+      </div>
+
+    </div>
+
+    <div id="loader-footer">
+      <div class="footer-pill">
+        <span>CETI Luis Teixeira</span>
+        <span class="sep">•</span>
+        <span class="hl">DO PIAUÍ PARA O MUNDO 2026</span>
+      </div>
+      <div class="app-version" id="app-version"></div>
+    </div>
+
+  </div>
+
+  <script>
+    const C = CONFIG;
+    document.getElementById('app-tagline').textContent = C.slogan;
+    document.getElementById('app-version').textContent = C.versao;
+    document.getElementById('favicon').href = C.faviconPath;
+
+    // Pré-carregamento da imagem do logo para evitar pisca do fallback
+    const logoImg = document.getElementById('logo-image');
+    const preloadImg = new Image();
+    preloadImg.src = logoImg.src;
+    preloadImg.onload = function() {
+      // A imagem já está em cache, o navegador a exibirá sem falhas
+      // Não precisa fazer nada extra, a animação já está no CSS
+    };
+
+    const overlayLoader = document.getElementById('loader');
+    const content = document.getElementById('loader-content');
+    const controls = document.getElementById('loader-controls');
+    const labelEl = document.getElementById('loader-label');
+    const progressEl = document.getElementById('progress-fill');
+    const footerEl = document.getElementById('loader-footer');
+    const dotsEl = document.getElementById('step-dots');
+    let loaderTimer;
+
+    const totalSteps = C.frases.length;
+    for (let i = 0; i < totalSteps; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === 0 ? ' active' : '');
+      dotsEl.appendChild(d);
+    }
+    const dots = dotsEl.querySelectorAll('.dot');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.add('ready');
+      setTimeout(() => content.classList.add('visible'), 150);
+      setTimeout(() => controls.classList.add('visible'), 700);
+      setTimeout(() => footerEl.classList.add('visible'), 1000);
+      setTimeout(startSequence, 950);
+    });
+
+    function startSequence() {
+      let step = 0;
+      function advance() {
+        const idx = step % totalSteps;
+        const pct = 6 + Math.round((idx / (totalSteps - 1)) * 88);
+        progressEl.style.width = pct + '%';
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        labelEl.classList.add('fade');
+        setTimeout(() => {
+          labelEl.textContent = C.frases[idx];
+          labelEl.classList.remove('fade');
+        }, 280);
+        step++;
+        loaderTimer = setTimeout(advance, 1600);
+      }
+      advance();
+    }
+
+    window.addEventListener('flutter-first-frame', () => {
+      clearTimeout(loaderTimer);
+      progressEl.style.width = '100%';
+      setTimeout(() => {
+        overlayLoader.style.opacity = '0';
+        setTimeout(() => overlayLoader.remove(), 800);
+      }, 250);
+    });
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+
+</body>
+</html>
