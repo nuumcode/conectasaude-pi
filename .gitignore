@@ -1,55 +1,35 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# VS Code
-.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Flutter/Dart
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
-/coverage/
+build/
+coverage/
 **/generated_plugin_registrant.dart
 
-# Symbolication related
-app.*.symbols
-app.*.map.json
+# Outras plataformas (não usar no Hackathon Web)
+android/
+ios/
+linux/
+macos/
+windows/
 
-# Android
-/android/app/debug
-/android/app/profile
-/android/app/release
-/android/.gradle/
-/android/local.properties
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
 
-# iOS
-/ios/Pods/
-/ios/Flutter/Generated.xcconfig
-/ios/Flutter/ephemeral/
+# VS Code (se quiser ignorar configurações pessoais)
+.vscode/
 
-# Firebase (se repositório público)
+# Arquivos sensíveis (se repositório público)
 firebase_options.dart
 google-services.json
 GoogleService-Info.plist
+
+# Arquivos temporários
+*.log
+*.swp
+.DS_Store
