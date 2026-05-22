@@ -21,15 +21,22 @@ windows/
 *.ipr
 *.iws
 
-# VS Code (se quiser ignorar configurações pessoais)
+# VS Code (configurações pessoais)
 .vscode/
 
-# Arquivos sensíveis (se repositório público)
-firebase_options.dart
+# Web build gerado
+build/web/
+
+# Arquivos sensíveis (NÃO versionar)
 google-services.json
 GoogleService-Info.plist
+.env
 
-# Arquivos temporários
+# Arquivos temporários do sistema
 *.log
 *.swp
 .DS_Store
+
+# Firebase cache local
+.firebase/
+.metadata

@@ -1,4 +1,18 @@
+// ═══════════════════════════════════════════════════════════════════
+//  home_cidadao_screen.dart  —  ConectaSaúdePI
+//
+//  ✅ Cards de resumo: 3 colunas no desktop, coluna única no mobile
+//     (usa MediaQuery.of(context).size.width, não LayoutBuilder+maxWidth)
+//  ✅ Drawer abre corretamente (scaffoldKey explícito)
+//  ✅ Zero overflow no header e nos cards
+//  ✅ AppBar com hamburguer em mobile, sem ele no desktop
+//  ✅ Layout desktop: drawer fixo + conteúdo Expanded
+//  ✅ Layout mobile: AppBar + Drawer lateral + BottomNav
+// ═══════════════════════════════════════════════════════════════════
+
 import 'package:conecta_saude_pi/features/auth/login_cidadao_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/ver_escala/cidadao_escala_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/minha_fila/cidadao_fila_screen.dart';
 import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
 import 'package:conecta_saude_pi/features/widgets/app_header.dart';
 import 'package:flutter/material.dart';
@@ -7,28 +21,28 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
 
-// ── Índice das abas do BottomNav / Drawer ───────────────────────────
 enum _Aba { inicio, agendamentos, prontuarios, mensagens, mais }
 
 class HomeCidadaoScreen extends StatefulWidget {
   const HomeCidadaoScreen({super.key});
-
   @override
   State<HomeCidadaoScreen> createState() => _HomeCidadaoScreenState();
 }
 
 class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
     with SingleTickerProviderStateMixin {
+  // ✅ GlobalKey para abrir o Drawer de qualquer lugar sem context errado
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   _Aba _abaAtual = _Aba.inicio;
 
-  // Stagger de entrada da home
   late final AnimationController _entryCtrl = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 800),
   )..forward();
 
-  // Dados mockados do usuário (substituir por Firestore)
   User? get _user => FirebaseAuth.instance.currentUser;
+
   String get _firstName {
     final name = _user?.displayName ?? _user?.email ?? 'Usuário';
     return name.split(' ').first;
@@ -41,7 +55,7 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
   }
 
   // ── Stagger helper ──────────────────────────────────────────────
-  Widget _stagger(int i, Widget child) {
+  Widget _st(int i, Widget child) {
     final fade = CurvedAnimation(
       parent: _entryCtrl,
       curve: Interval(
@@ -62,10 +76,8 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
       animation: _entryCtrl,
       builder: (_, __) => Opacity(
         opacity: fade.value,
-        child: Transform.translate(
-          offset: Offset(0, slide.value),
-          child: child,
-        ),
+        child:
+            Transform.translate(offset: Offset(0, slide.value), child: child),
       ),
     );
   }
@@ -73,32 +85,73 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
   // ── Logout ──────────────────────────────────────────────────────
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
-    await GoogleSignIn().signOut();
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       AppFadeRoute(page: const LoginCidadaoScreen()),
     );
   }
 
+  // ── Navegação pelo Drawer ────────────────────────────────────────
+  void _onAbaChanged(dynamic aba) {
+    // DrawerAba.inicio = permanecer no dashboard
+    if (aba.index == DrawerAba.inicio.index) return;
+    final Widget? destino = _resolverAba(aba);
+    if (destino != null) {
+      Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Em breve.'),
+        duration: Duration(seconds: 1),
+      ));
+    }
+  }
+
+  /// Mapeia qualquer [DrawerAba] para a tela correspondente.
+  /// Retorna null para abas ainda não implementadas.
+  Widget? _resolverAba(dynamic aba) {
+    switch (aba) {
+      case DrawerAba.inicio:
+        return const HomeCidadaoScreen();
+      case DrawerAba.agendamentos:
+        return const CidadaoEscalaScreen();
+      case DrawerAba.fila:
+        return const CidadaoFilaScreen();
+      // Abas futuras — descomente quando as telas existirem:
+      // case DrawerAba.prontuarios:  return const CidadaoProntuariosScreen();
+      // case DrawerAba.vacinacao:    return const CidadaoVacinacaoScreen();
+      // case DrawerAba.mensagens:    return const CidadaoMensagensScreen();
+      // case DrawerAba.notificacoes: return const CidadaoNotificacoesScreen();
+      // case DrawerAba.emergencia:   return const CidadaoEmergenciaScreen();
+      default:
+        return null;
+    }
+  }
+
   // ── Build ────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    final isDesktop = w >= 600;
+    final isDesktop = w >= 700;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFFF4F7FB),
-      // Drawer lateral (mobile)
+
+      // Drawer lateral mobile
       drawer: isDesktop
           ? null
           : AppDrawer(
               userName: _user?.displayName ?? 'Usuário',
               userEmail: _user?.email ?? '',
               userPhoto: _user?.photoURL,
-              abaAtual: _abaAtual,
-              onAbaChanged: (a) => setState(() => _abaAtual = a),
+              abaAtual: DrawerAba.inicio,
+              onAbaChanged: _onAbaChanged,
               onLogout: _logout,
             ),
+
       body: isDesktop ? _buildDesktop() : _buildMobile(),
       bottomNavigationBar: isDesktop ? null : _buildBottomNav(),
     );
@@ -106,117 +159,119 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
 
   // ── Layout Desktop ───────────────────────────────────────────────
   Widget _buildDesktop() {
-    return Row(
-      children: [
-        // Drawer fixo lateral
-        SizedBox(
-          width: 260,
-          child: AppDrawer(
-            userName: _user?.displayName ?? 'Usuário',
-            userEmail: _user?.email ?? '',
+    return Row(children: [
+      SizedBox(
+        width: 260,
+        child: AppDrawer(
+          userName: _user?.displayName ?? 'Usuário',
+          userEmail: _user?.email ?? '',
+          userPhoto: _user?.photoURL,
+          abaAtual: DrawerAba.inicio,
+          onAbaChanged: _onAbaChanged,
+          onLogout: _logout,
+          isFixed: true,
+        ),
+      ),
+      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Expanded(
+        child: Column(children: [
+          AppHeader(
+            userName: _firstName,
             userPhoto: _user?.photoURL,
-            abaAtual: _abaAtual,
-            onAbaChanged: (a) => setState(() => _abaAtual = a),
             onLogout: _logout,
-            isFixed: true,
+            onMenuPressed: null,
           ),
-        ),
-        // Separador
-        Container(width: 1, color: const Color(0xFFE2E8F0)),
-        // Conteúdo principal
-        Expanded(
-          child: Column(
-            children: [
-              AppHeader(
-                userName: _firstName,
-                userPhoto: _user?.photoURL,
-                onLogout: _logout,
-                onMenuPressed: null, // sem hamburguer no desktop
-              ),
-              Expanded(child: _buildConteudo()),
-            ],
-          ),
-        ),
-      ],
-    );
+          Expanded(child: _buildConteudo()),
+        ]),
+      ),
+    ]);
   }
 
-  // ── Layout Mobile ────────────────────────────────────────────────
+  // ── Layout Mobile ─────────────────────────────────────────────────
+  // ✅ usa _scaffoldKey.currentState!.openDrawer() — sem context errado
   Widget _buildMobile() {
-    return Column(
-      children: [
-        AppHeader(
-          userName: _firstName,
-          userPhoto: _user?.photoURL,
-          onLogout: _logout,
-          onMenuPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-        Expanded(child: _buildConteudo()),
-      ],
-    );
+    return Column(children: [
+      AppHeader(
+        userName: _firstName,
+        userPhoto: _user?.photoURL,
+        onLogout: _logout,
+        onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+      ),
+      Expanded(child: _buildConteudo()),
+    ]);
   }
 
   // ── Conteúdo scrollável ──────────────────────────────────────────
   Widget _buildConteudo() {
+    final w = MediaQuery.of(context).size.width;
+    final isDesktop = w >= 700;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 800),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _stagger(0,
-                _buildSectionLabel(Icons.show_chart_rounded, 'Resumo rápido')),
-            const SizedBox(height: 12),
-            _stagger(1, _buildResumoRapido()),
-            const SizedBox(height: 28),
-            _stagger(
-                2,
-                _buildSectionLabel(
-                    Icons.rocket_launch_rounded, 'Ações rápidas')),
-            const SizedBox(height: 12),
-            _stagger(3, _buildAcoesRapidas()),
-            const SizedBox(height: 28),
-            _stagger(
-                4,
-                _buildSectionLabel(
-                  Icons.notifications_none_rounded,
-                  'Notificações recentes',
-                  trailing: TextButton(
-                    onPressed: () {},
-                    child: Text('Ver todas',
-                        style: TextStyle(
-                            color: AppColors.primaryDeep,
-                            fontFamily: 'Poppins',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600)),
-                  ),
-                )),
-            const SizedBox(height: 12),
-            _stagger(5, _buildNotificacoes()),
-          ],
+      padding: EdgeInsets.fromLTRB(
+        isDesktop ? 24 : 16,
+        20,
+        isDesktop ? 24 : 16,
+        24,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 860),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _st(0, _sectionLabel(Icons.show_chart_rounded, 'Resumo rápido')),
+              const SizedBox(height: 12),
+              _st(1, _buildResumoRapido()),
+              const SizedBox(height: 28),
+              _st(2,
+                  _sectionLabel(Icons.rocket_launch_rounded, 'Ações rápidas')),
+              const SizedBox(height: 12),
+              _st(3, _buildAcoesRapidas()),
+              const SizedBox(height: 28),
+              _st(
+                  4,
+                  _sectionLabel(
+                    Icons.notifications_none_rounded,
+                    'Notificações recentes',
+                    trailing: TextButton(
+                      onPressed: () {},
+                      child: Text('Ver todas',
+                          style: TextStyle(
+                              color: AppColors.primaryDeep,
+                              fontFamily: 'Poppins',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  )),
+              const SizedBox(height: 12),
+              _st(5, _buildNotificacoes()),
+            ],
+          ),
         ),
       ),
     );
   }
 
   // ── Label de seção ───────────────────────────────────────────────
-  Widget _buildSectionLabel(IconData icon, String label, {Widget? trailing}) =>
+  Widget _sectionLabel(IconData icon, String label, {Widget? trailing}) =>
       Row(children: [
         Icon(icon, color: AppColors.bgMid, size: 20),
         const SizedBox(width: 8),
-        Text(label,
-            style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.bgBase)),
-        const Spacer(),
+        Expanded(
+          child: Text(label,
+              style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.bgBase)),
+        ),
         if (trailing != null) trailing,
       ]);
 
-  // ── Resumo rápido (3 cards) ──────────────────────────────────────
+  // ── Resumo rápido ────────────────────────────────────────────────
+  // ✅ usa MediaQuery direto — sem LayoutBuilder que pode ter maxWidth errado
   Widget _buildResumoRapido() {
+    final screenW = MediaQuery.of(context).size.width;
     final cards = [
       _ResumoData(
         icon: Icons.calendar_today_rounded,
@@ -248,56 +303,68 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
       ),
     ];
 
-    return LayoutBuilder(builder: (_, c) {
-      final cols = c.maxWidth > 500 ? 3 : 1;
-      if (cols == 3) {
-        return Row(
-            children: cards
-                .map((d) => Expanded(
-                        child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: _ResumoCard(data: d),
-                    )))
-                .toList());
-      }
-      return Column(
-          children: cards
-              .map((d) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+    // Desktop (≥700): 3 colunas em Row
+    if (screenW >= 700) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: cards
+            .map((d) => Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
                     child: _ResumoCard(data: d),
-                  ))
-              .toList());
-    });
+                  ),
+                ))
+            .toList(),
+      );
+    }
+
+    // Mobile: coluna única, largura total, sem overflow
+    return Column(
+      children: cards
+          .map((d) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: _ResumoCard(data: d),
+                ),
+              ))
+          .toList(),
+    );
   }
 
-  // ── Ações rápidas (2×2 grid) ────────────────────────────────────
+  // ── Ações rápidas ────────────────────────────────────────────────
+  // ✅ childAspectRatio adaptativo — sem overflow em telas estreitas
   Widget _buildAcoesRapidas() {
+    final screenW = MediaQuery.of(context).size.width;
     final acoes = [
       _AcaoData(
-        icon: Icons.calendar_month_rounded,
-        label: 'Agendar\nconsulta',
-        destaque: false,
-        onTap: () {},
-      ),
+          icon: Icons.calendar_month_rounded,
+          label: 'Agendar\nconsulta',
+          destaque: false,
+          onTap: () {}),
       _AcaoData(
-        icon: Icons.folder_shared_rounded,
-        label: 'Ver meus\nprontuários',
-        destaque: false,
-        onTap: () {},
-      ),
+          icon: Icons.folder_shared_rounded,
+          label: 'Meus\nprontuários',
+          destaque: false,
+          onTap: () {}),
       _AcaoData(
-        icon: Icons.groups_rounded,
-        label: 'Fila\nvirtual',
-        destaque: false,
-        onTap: () {},
-      ),
+          icon: Icons.groups_rounded,
+          label: 'Fila\nvirtual',
+          destaque: false,
+          onTap: () {}),
       _AcaoData(
-        icon: Icons.emergency_rounded,
-        label: 'Emergência',
-        destaque: true,
-        onTap: () {},
-      ),
+          icon: Icons.emergency_rounded,
+          label: 'Emergência',
+          destaque: true,
+          onTap: () {}),
     ];
+
+    // Calcula padding total para saber a largura real disponível
+    final hPad = screenW >= 700 ? 48.0 : 32.0; // 2 × padding lateral
+    final availW = (screenW - hPad).clamp(100.0, 860.0);
+    final itemW = (availW - 12) / 2; // 2 colunas, gap 12
+    // aspect ratio baseado na largura real do item
+    final ratio = itemW / 72.0; // altura alvo ~72px
 
     return GridView.count(
       crossAxisCount: 2,
@@ -305,7 +372,7 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      childAspectRatio: 2.4,
+      childAspectRatio: ratio.clamp(1.8, 3.0),
       children: acoes.map((a) => _AcaoTile(data: a)).toList(),
     );
   }
@@ -347,7 +414,7 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
     );
   }
 
-  // ── BottomNavigationBar (mobile) ─────────────────────────────────
+  // ── BottomNavigationBar ──────────────────────────────────────────
   Widget _buildBottomNav() {
     return Container(
       decoration: const BoxDecoration(
@@ -385,9 +452,9 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
   }
 }
 
-// ───────────────────────────────────────────────────────────────────
-//  DATA MODELS (internos)
-// ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  DATA MODELS
+// ═══════════════════════════════════════════════════════════════════
 
 class _ResumoData {
   final IconData icon;
@@ -412,28 +479,30 @@ class _AcaoData {
   final String label;
   final bool destaque;
   final VoidCallback onTap;
-  const _AcaoData(
-      {required this.icon,
-      required this.label,
-      required this.destaque,
-      required this.onTap});
+  const _AcaoData({
+    required this.icon,
+    required this.label,
+    required this.destaque,
+    required this.onTap,
+  });
 }
 
 class _NotifData {
   final IconData icon;
   final String titulo, sub, data;
   final bool lida;
-  const _NotifData(
-      {required this.icon,
-      required this.titulo,
-      required this.sub,
-      required this.data,
-      required this.lida});
+  const _NotifData({
+    required this.icon,
+    required this.titulo,
+    required this.sub,
+    required this.data,
+    required this.lida,
+  });
 }
 
-// ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
 //  CARD DE RESUMO
-// ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
 
 class _ResumoCard extends StatelessWidget {
   final _ResumoData data;
@@ -454,8 +523,8 @@ class _ResumoCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min, // ✅ sem altura infinita
         children: [
-          // Ícone
           Container(
             width: 44,
             height: 44,
@@ -466,21 +535,24 @@ class _ResumoCard extends StatelessWidget {
             child: Icon(data.icon, color: data.cor, size: 22),
           ),
           const SizedBox(height: 12),
-          // Título
           Text(data.titulo,
-              style: TextStyle(
+              style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 12,
-                  color: const Color(0xFF64748B),
+                  color: Color(0xFF64748B),
                   fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
-          // Valor
-          Text(data.valor,
-              style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.bgBase)),
+          // ✅ Valor com FittedBox para nunca overflow
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(data.valor,
+                style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.bgBase)),
+          ),
           if (data.sub.isNotEmpty) ...[
             const SizedBox(height: 2),
             Text(data.sub,
@@ -490,7 +562,7 @@ class _ResumoCard extends StatelessWidget {
                     color: Color(0xFF64748B))),
           ],
           const SizedBox(height: 12),
-          // Rodapé
+          // Rodapé — ✅ Flexible para não overflow
           GestureDetector(
             onTap: data.onRodapeTap,
             child: Container(
@@ -502,12 +574,15 @@ class _ResumoCard extends StatelessWidget {
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(data.rodapeIcon, size: 13, color: data.cor),
                 const SizedBox(width: 5),
-                Text(data.rodape,
-                    style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: data.cor)),
+                Flexible(
+                  child: Text(data.rodape,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: data.cor)),
+                ),
               ]),
             ),
           ),
@@ -517,9 +592,9 @@ class _ResumoCard extends StatelessWidget {
   }
 }
 
-// ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
 //  TILE DE AÇÃO RÁPIDA
-// ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
 
 class _AcaoTile extends StatelessWidget {
   final _AcaoData data;
@@ -536,7 +611,7 @@ class _AcaoTile extends StatelessWidget {
     return GestureDetector(
       onTap: data.onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(16),
@@ -554,26 +629,30 @@ class _AcaoTile extends StatelessWidget {
         ),
         child: Row(children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
                 color: iconBg, borderRadius: BorderRadius.circular(10)),
             child: Icon(data.icon,
                 color: data.destaque ? Colors.white : AppColors.bgMid,
-                size: 20),
+                size: 19),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
+          // ✅ Expanded + overflow ellipsis — sem RenderFlex overflow
           Expanded(
             child: Text(data.label,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
                 style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: fg,
                     height: 1.3)),
           ),
+          const SizedBox(width: 4),
           Icon(Icons.arrow_forward_ios_rounded,
-              size: 14,
+              size: 12,
               color: data.destaque ? Colors.white70 : const Color(0xFF94A3B8)),
         ]),
       ),
@@ -581,9 +660,9 @@ class _AcaoTile extends StatelessWidget {
   }
 }
 
-// ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
 //  CARD DE NOTIFICAÇÃO
-// ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
 
 class _NotifCard extends StatelessWidget {
   final _NotifData data;
@@ -603,7 +682,6 @@ class _NotifCard extends StatelessWidget {
         ],
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Ícone
         Container(
           width: 40,
           height: 40,
@@ -614,53 +692,52 @@ class _NotifCard extends StatelessWidget {
           child: Icon(data.icon, color: AppColors.bgMid, size: 18),
         ),
         const SizedBox(width: 12),
-        // Texto
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Expanded(
-                  child: Text(data.titulo,
-                      style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.bgBase)),
-                ),
-                Text(data.data,
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              // ✅ Expanded no título para não overflow com a data
+              Expanded(
+                child: Text(data.titulo,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 11,
-                        color: Color(0xFF94A3B8))),
-                if (!data.lida) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(
-                          color: AppColors.primaryDeep,
-                          shape: BoxShape.circle)),
-                ],
-              ]),
-              const SizedBox(height: 4),
-              Text(data.sub,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.bgBase)),
+              ),
+              const SizedBox(width: 8),
+              Text(data.data,
                   style: const TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: 12,
-                      color: Color(0xFF64748B),
-                      height: 1.4)),
-            ],
-          ),
+                      fontSize: 11,
+                      color: Color(0xFF94A3B8))),
+              if (!data.lida) ...[
+                const SizedBox(width: 6),
+                Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                        color: AppColors.primaryDeep, shape: BoxShape.circle)),
+              ],
+            ]),
+            const SizedBox(height: 4),
+            Text(data.sub,
+                style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    color: Color(0xFF64748B),
+                    height: 1.4)),
+          ]),
         ),
       ]),
     );
   }
 }
 
-// ───────────────────────────────────────────────────────────────────
-//  BADGE ICON (BottomNav com contador)
-// ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  BADGE ICON
+// ═══════════════════════════════════════════════════════════════════
 
 class _BadgeIcon extends StatelessWidget {
   final IconData icon;

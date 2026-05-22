@@ -2,31 +2,38 @@
 //  app_drawer.dart  —  ConectaSaúdePI
 //  Drawer reutilizável (mobile: Scaffold.drawer / desktop: fixo)
 //
-//  Baseado na estrutura do CustomDrawer (nuum_gestao) mas
-//  100% adaptado à paleta e identidade do ConectaSaúdePI.
-//
-//  Uso:
-//    Mobile:  Scaffold(drawer: AppDrawer(...))
-//    Desktop: Row(children: [SizedBox(width:260, child: AppDrawer(isFixed:true)), ...])
+//  ✅ Enum DrawerAba estendido — cada item tem aba própria
+//  ✅ Os 5 primeiros valores mantêm alinhamento de índice com _Aba
+//     do HomeCidadaoScreen (compatibilidade com dashboard).
 // ═══════════════════════════════════════════════════════════════════
 
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
 
-// enum importado da home para reutilização
-// (se preferir, mova para um arquivo shared/models/aba.dart)
-enum DrawerAba { inicio, agendamentos, prontuarios, mensagens, mais }
+// ⚠️ Os 5 primeiros valores DEVEM permanecer alinhados com _Aba do
+// HomeCidadaoScreen (inicio, agendamentos, prontuarios, mensagens, mais).
+// Novos valores devem ser adicionados ao final.
+enum DrawerAba {
+  inicio, // 0
+  agendamentos, // 1
+  prontuarios, // 2
+  mensagens, // 3
+  mais, // 4
+  vacinacao, // 5
+  fila, // 6
+  notificacoes, // 7
+  emergencia, // 8
+}
 
 class AppDrawer extends StatelessWidget {
   final String userName;
   final String userEmail;
   final String? userPhoto;
-  final dynamic abaAtual; // aceita DrawerAba ou o enum da home
+  final dynamic abaAtual; // aceita DrawerAba ou enum compatível por índice
   final void Function(dynamic) onAbaChanged;
   final VoidCallback onLogout;
   final bool isFixed; // true = desktop (sem borda arredondada)
-
   const AppDrawer({
     super.key,
     required this.userName,
@@ -37,7 +44,6 @@ class AppDrawer extends StatelessWidget {
     required this.onLogout,
     this.isFixed = false,
   });
-
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -51,10 +57,7 @@ class AppDrawer extends StatelessWidget {
               bottomRight: Radius.circular(0),
             )),
       child: Column(children: [
-        // ── Cabeçalho ─────────────────────────────────────────────
         _buildHeader(context),
-
-        // ── Navegação ─────────────────────────────────────────────
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -73,26 +76,14 @@ class AppDrawer extends StatelessWidget {
                 _buildItem(
                   context,
                   icon: Icons.calendar_today_rounded,
-                  label: 'Agendamentos',
+                  label: 'Escala/Agendamentos',
                   aba: DrawerAba.agendamentos,
-                ),
-                _buildItem(
-                  context,
-                  icon: Icons.folder_shared_rounded,
-                  label: 'Prontuários',
-                  aba: DrawerAba.prontuarios,
-                ),
-                _buildItem(
-                  context,
-                  icon: Icons.verified_user_outlined,
-                  label: 'Vacinação',
-                  aba: DrawerAba.mais, // placeholder
                 ),
                 _buildItem(
                   context,
                   icon: Icons.groups_rounded,
                   label: 'Fila Virtual',
-                  aba: DrawerAba.mais,
+                  aba: DrawerAba.fila,
                 ),
                 const SizedBox(height: 16),
                 _buildSectionLabel('COMUNICAÇÃO'),
@@ -107,7 +98,7 @@ class AppDrawer extends StatelessWidget {
                   context,
                   icon: Icons.notifications_none_rounded,
                   label: 'Notificações',
-                  aba: DrawerAba.mais,
+                  aba: DrawerAba.notificacoes,
                 ),
                 const SizedBox(height: 16),
                 _buildSectionLabel('EMERGÊNCIA'),
@@ -115,21 +106,18 @@ class AppDrawer extends StatelessWidget {
                   context,
                   icon: Icons.emergency_rounded,
                   label: 'Emergência',
-                  aba: DrawerAba.mais,
+                  aba: DrawerAba.emergencia,
                   isEmergency: true,
                 ),
               ],
             ),
           ),
         ),
-
-        // ── Rodapé ────────────────────────────────────────────────
         _buildFooter(context),
       ]),
     );
   }
 
-  // ── Cabeçalho com logo ──────────────────────────────────────────
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 52, 20, 20),
@@ -140,7 +128,6 @@ class AppDrawer extends StatelessWidget {
         ),
       ),
       child: Row(children: [
-        // Logo como Hero (voa da LoginScreen)
         Hero(
           tag: 'brand-logo-drawer',
           child: Container(
@@ -226,7 +213,6 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  // ── Label de seção ──────────────────────────────────────────────
   Widget _buildSectionLabel(String label) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
         child: Text(label,
@@ -237,8 +223,6 @@ class AppDrawer extends StatelessWidget {
                 color: Colors.white.withOpacity(0.35),
                 letterSpacing: 1.8)),
       );
-
-  // ── Item de navegação ───────────────────────────────────────────
   Widget _buildItem(
     BuildContext context, {
     required IconData icon,
@@ -258,7 +242,6 @@ class AppDrawer extends StatelessWidget {
         : isEmergency
             ? const Color(0xFFFF6B6B).withOpacity(0.10)
             : Colors.transparent;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: Material(
@@ -308,7 +291,6 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  // ── Rodapé com avatar + logout ──────────────────────────────────
   Widget _buildFooter(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -317,7 +299,6 @@ class AppDrawer extends StatelessWidget {
         border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
       ),
       child: Row(children: [
-        // Avatar
         CircleAvatar(
           radius: 20,
           backgroundColor: AppColors.primaryDeep,
@@ -354,7 +335,6 @@ class AppDrawer extends StatelessWidget {
             ],
           ),
         ),
-        // Logout
         IconButton(
           onPressed: onLogout,
           tooltip: 'Sair',

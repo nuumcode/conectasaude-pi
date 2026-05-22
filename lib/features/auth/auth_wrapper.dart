@@ -1,14 +1,27 @@
 // ═══════════════════════════════════════════════════════════════════
 //  auth_wrapper.dart  —  ConectaSaúdePI
-//  (versão otimizada — logo surge sem placeholder)
+//
+//  RESPONSABILIDADE:
+//    Splash animado de ~2.5s + verificação de sessão Firebase.
+//    Decide pra onde vai SEM piscar:
+//
+//    Não logado          → /login
+//    Logado + admin      → /admin/home
+//    Logado + cidadão    → /home
+//
+//  O SEGREDO anti-pisca:
+//    A verificação acontece DURANTE o splash (paralela à animação).
+//    Quando o timer de 2.5s dispara, a decisão já está tomada.
+//    Zero tela branca, zero redirect duplo.
 // ═══════════════════════════════════════════════════════════════════
 
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
-import 'login_cidadao_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -18,6 +31,7 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper>
     with TickerProviderStateMixin {
+  // ── Labels ──────────────────────────────────────────────────────
   static const _labels = [
     'CONECTANDO UNIDADES...',
     'CARREGANDO ESCALAS...',
@@ -29,7 +43,10 @@ class _AuthWrapperState extends State<AuthWrapper>
   Timer? _stepTimer;
   bool _phaseB = false;
 
-  // Controllers
+  // Destino já resolvido durante o splash (null = ainda verificando)
+  String? _destino; // '/login', '/home' ou '/admin/home'
+
+  // ── Controllers ─────────────────────────────────────────────────
   late final AnimationController _floatCtrl = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 5000),
@@ -62,6 +79,12 @@ class _AuthWrapperState extends State<AuthWrapper>
     value: 1.0,
   );
 
+  late final AnimationController _logoAppearCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+    value: 0.0,
+  );
+
   late final _float = Tween(begin: 0.0, end: -7.0)
       .animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
 
@@ -73,34 +96,60 @@ class _AuthWrapperState extends State<AuthWrapper>
   late final _barFade =
       CurvedAnimation(parent: _barCtrl, curve: Curves.easeOut);
 
-  // Controlador para animar o surgimento da logo
-  late final AnimationController _logoAppearCtrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 600),
-    value: 0.0,
-  );
-
+  // ── Lifecycle ───────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
 
+    // Labels cycling
     _stepTimer = Timer.periodic(const Duration(milliseconds: 1600), (t) {
       if (!mounted) return;
       if (_step < _labels.length - 1) setState(() => _step++);
     });
 
+    // Fase B (logo sobe, fundo clareia)
     Future.delayed(const Duration(milliseconds: 1500), _enterPhaseB);
-    Future.delayed(const Duration(milliseconds: 2000), _navigate);
+
+    // Verifica sessão EM PARALELO ao splash — não bloqueia a animação
+    _resolverDestino();
+
+    // Timer do splash — navega quando os 2500ms acabam
+    // (o destino já foi resolvido antes disso na maioria dos casos)
+    Future.delayed(const Duration(milliseconds: 2500), _navigate);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Pré-carrega a imagem para que esteja em cache antes da primeira renderização
     precacheImage(const AssetImage('assets/logo-var01.png'), context).then((_) {
-      // Quando a imagem estiver em cache, inicia a animação de surgimento
       if (mounted) _logoAppearCtrl.forward();
     });
+  }
+
+  // ── Resolve destino durante o splash ────────────────────────────
+  Future<void> _resolverDestino() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        _destino = '/login';
+        return;
+      }
+
+      // Usuário logado — verifica perfil no Firestore
+      final doc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .get();
+
+      if (!mounted) return;
+
+      final perfil = doc.data()?['perfil'] as String?;
+      _destino = (perfil == 'admin') ? '/admin/home' : '/home';
+    } catch (_) {
+      // Erro de rede etc — vai para login como fallback seguro
+      _destino = '/login';
+    }
   }
 
   void _enterPhaseB() {
@@ -115,9 +164,17 @@ class _AuthWrapperState extends State<AuthWrapper>
 
   Future<void> _navigate() async {
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      AppHeroFadeRoute(page: const LoginCidadaoScreen()),
-    );
+
+    // Se o destino ainda não foi resolvido (Firestore lento),
+    // aguarda mais um pouco antes de navegar
+    if (_destino == null) {
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (!mounted) return;
+      // Se ainda null, vai para login como fallback
+      _destino ??= '/login';
+    }
+
+    Navigator.of(context).pushReplacementNamed(_destino!);
   }
 
   @override
@@ -133,37 +190,53 @@ class _AuthWrapperState extends State<AuthWrapper>
     super.dispose();
   }
 
+  // ── Build ────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.navyDeep,
       body: Stack(children: [
-        // Fundo fade-in
+        // Fundo — aparece na fase B
         AnimatedBuilder(
           animation: _bgFadeCtrl,
-          builder: (_, child) => Opacity(opacity: _bgFade.value, child: child),
+          builder: (_, child) => Opacity(opacity: _bgFade.value, child: child!),
           child: AppBackground(child: const SizedBox.expand()),
         ),
 
+        // Linha topo
         const Positioned(top: 0, left: 0, right: 0, child: AppTopLine()),
 
-        // Conteúdo principal
+        // Logo + progresso
         AnimatedBuilder(
           animation: Listenable.merge(
               [_floatCtrl, _pulseCtrl, _ringCtrl, _logoAppearCtrl]),
           builder: (_, __) => Stack(children: [
-            // Logo centralizada, com fade e scale no surgimento
             Align(
               alignment: Alignment.center,
               child: Opacity(
                 opacity: _logoAppearCtrl.value,
                 child: Transform.scale(
                   scale: 0.92 + (0.08 * _logoAppearCtrl.value),
-                  child: _buildLogoHero(),
+                  child: Hero(
+                    tag: 'brand-logo',
+                    flightShuttleBuilder: (_, anim, __, ___, ____) =>
+                        AnimatedBuilder(
+                      animation: anim,
+                      builder: (_, __) => _BrandLogoWidget(
+                        ringValue: _ringCtrl.value,
+                        pulseValue: _pulse.value,
+                        floatOffset: 0,
+                      ),
+                    ),
+                    child: _BrandLogoWidget(
+                      ringValue: _ringCtrl.value,
+                      pulseValue: _pulse.value,
+                      floatOffset: _phaseB ? 0 : _float.value,
+                    ),
+                  ),
                 ),
               ),
             ),
-
             FadeTransition(
               opacity: _barFade,
               child: Align(
@@ -174,6 +247,7 @@ class _AuthWrapperState extends State<AuthWrapper>
           ]),
         ),
 
+        // Footer
         Positioned(
           bottom: 24,
           left: 0,
@@ -187,52 +261,33 @@ class _AuthWrapperState extends State<AuthWrapper>
     );
   }
 
-  Widget _buildLogoHero() {
-    return Hero(
-      tag: 'brand-logo',
-      flightShuttleBuilder: (_, anim, dir, fromCtx, toCtx) {
-        return AnimatedBuilder(
-          animation: anim,
-          builder: (_, __) => _BrandLogoWidget(
-            ringValue: _ringCtrl.value,
-            pulseValue: _pulse.value,
-            floatOffset: 0,
-          ),
-        );
-      },
-      child: _BrandLogoWidget(
-        ringValue: _ringCtrl.value,
-        pulseValue: _pulse.value,
-        floatOffset: _phaseB ? 0 : _float.value,
-      ),
-    );
-  }
-
   Widget _buildProgress() {
     return Column(mainAxisSize: MainAxisSize.min, children: [
       SizedBox(
-          width: 160,
-          child: AnimatedBuilder(
-              animation: _progressCtrl,
-              builder: (_, __) => Stack(children: [
-                    Container(
-                        height: 2,
-                        decoration: BoxDecoration(
-                            color: AppColors.borderDim,
-                            borderRadius: BorderRadius.circular(2))),
-                    FractionallySizedBox(
-                        widthFactor: _progressCtrl.value,
-                        child: Container(
-                            height: 2,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(2),
-                                gradient: AppColors.primaryGradient,
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: AppColors.greenLt.withOpacity(0.5),
-                                      blurRadius: 6)
-                                ])))
-                  ]))),
+        width: 160,
+        child: AnimatedBuilder(
+          animation: _progressCtrl,
+          builder: (_, __) => Stack(children: [
+            Container(
+                height: 2,
+                decoration: BoxDecoration(
+                    color: AppColors.borderDim,
+                    borderRadius: BorderRadius.circular(2))),
+            FractionallySizedBox(
+                widthFactor: _progressCtrl.value,
+                child: Container(
+                    height: 2,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        gradient: AppColors.primaryGradient,
+                        boxShadow: [
+                          BoxShadow(
+                              color: AppColors.greenLt.withOpacity(0.5),
+                              blurRadius: 6)
+                        ]))),
+          ]),
+        ),
+      ),
       const SizedBox(height: 14),
       AnimatedSwitcher(
         duration: const Duration(milliseconds: 280),
@@ -249,34 +304,33 @@ class _AuthWrapperState extends State<AuthWrapper>
       ),
       const SizedBox(height: 12),
       Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(
-              _labels.length,
-              (i) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 380),
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: i == _step ? 10 : 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          i == _step ? AppColors.greenLt : AppColors.borderMid,
-                      borderRadius: BorderRadius.circular(2),
-                      boxShadow: i == _step
-                          ? [
-                              BoxShadow(
-                                  color: AppColors.greenLt.withOpacity(0.55),
-                                  blurRadius: 7)
-                            ]
-                          : null,
-                    ),
-                  )))
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(
+            _labels.length,
+            (i) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 380),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == _step ? 10 : 4,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: i == _step ? AppColors.greenLt : AppColors.borderMid,
+                    borderRadius: BorderRadius.circular(2),
+                    boxShadow: i == _step
+                        ? [
+                            BoxShadow(
+                                color: AppColors.greenLt.withOpacity(0.55),
+                                blurRadius: 7)
+                          ]
+                        : null,
+                  ),
+                )),
+      ),
     ]);
   }
 }
 
 // ─────────────────────────────────────────────────────────────────
-//  _BrandLogoWidget — ícone + nome da marca
-//  (sem fallback visual — imagem só aparece quando pronta)
+//  _BrandLogoWidget
 // ─────────────────────────────────────────────────────────────────
 
 class _BrandLogoWidget extends StatelessWidget {
@@ -320,21 +374,19 @@ class _BrandLogoWidget extends StatelessWidget {
             ]),
           ),
         ),
-
-        // Anéis
+        // Anel externo
         Transform.rotate(
           angle: ringValue * 2 * math.pi,
           child: CustomPaint(
               size: const Size(138, 138), painter: ArcRingPainter()),
         ),
+        // Anel interno
         Transform.rotate(
           angle: -ringValue * math.pi,
           child: CustomPaint(
               size: const Size(158, 158), painter: InnerRingPainter()),
         ),
-
-        // Card da logo (gradiente, sombras) — invisível até imagem carregar
-        // A imagem carrega por cima e o card só aparece junto com ela via opacity no pai
+        // Card da logo
         Container(
           width: 86,
           height: 86,
@@ -349,7 +401,7 @@ class _BrandLogoWidget extends StatelessWidget {
               BoxShadow(
                 color: AppColors.blue.withOpacity(0.38 + 0.12 * pulseValue),
                 blurRadius: 20 + 8 * pulseValue,
-              ),
+              )
             ],
           ),
           child: ClipRRect(
@@ -359,28 +411,19 @@ class _BrandLogoWidget extends StatelessWidget {
               width: 86,
               height: 86,
               fit: BoxFit.contain,
-              // fallback transparente: não mostra nada até a imagem carregar
               frameBuilder: (ctx, child, frame, wasSyncLoaded) {
                 if (wasSyncLoaded || frame != null) {
-                  // Imagem pronta — mostra com fade
                   return Padding(
                     padding: const EdgeInsets.all(10),
-                    child: AnimatedOpacity(
-                      opacity: 1.0,
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeIn,
-                      child: child,
-                    ),
+                    child: child,
                   );
                 }
-                // Nada visível (mantém o espaço, mas vazio)
                 return const SizedBox.shrink();
               },
               errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             ),
           ),
         ),
-
         // Ponto de status
         Positioned(
           bottom: 12,
@@ -411,17 +454,16 @@ class _BrandLogoWidget extends StatelessWidget {
         text: TextSpan(children: [
           const TextSpan(text: 'Conecta', style: AppTextStyles.appNameConecta),
           TextSpan(
-            text: 'Saúde',
-            style: AppTextStyles.appNameSaude.copyWith(shadows: [
-              Shadow(color: AppColors.blueLt.withOpacity(0.4), blurRadius: 14)
-            ]),
-          ),
+              text: 'Saúde',
+              style: AppTextStyles.appNameSaude.copyWith(shadows: [
+                Shadow(color: AppColors.blueLt.withOpacity(0.4), blurRadius: 14)
+              ])),
           TextSpan(
-            text: 'PI',
-            style: AppTextStyles.appNamePi.copyWith(shadows: [
-              Shadow(color: AppColors.greenLt.withOpacity(0.5), blurRadius: 14)
-            ]),
-          ),
+              text: 'PI',
+              style: AppTextStyles.appNamePi.copyWith(shadows: [
+                Shadow(
+                    color: AppColors.greenLt.withOpacity(0.5), blurRadius: 14)
+              ])),
         ]),
       ),
       const SizedBox(height: 6),
