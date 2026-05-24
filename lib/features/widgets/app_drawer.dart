@@ -5,8 +5,8 @@
 //  ✅ Enum DrawerAba estendido — cada item tem aba própria
 //  ✅ Os 5 primeiros valores mantêm alinhamento de índice com _Aba
 //     do HomeCidadaoScreen (compatibilidade com dashboard).
+//  ✅ Novo: item "Meu Perfil" (DrawerAba.perfil) na seção CONTA
 // ═══════════════════════════════════════════════════════════════════
-
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
@@ -24,6 +24,7 @@ enum DrawerAba {
   fila, // 6
   notificacoes, // 7
   emergencia, // 8
+  perfil, // 9  ← novo
 }
 
 class AppDrawer extends StatelessWidget {
@@ -99,6 +100,14 @@ class AppDrawer extends StatelessWidget {
                   icon: Icons.notifications_none_rounded,
                   label: 'Notificações',
                   aba: DrawerAba.notificacoes,
+                ),
+                const SizedBox(height: 16),
+                _buildSectionLabel('CONTA'),
+                _buildItem(
+                  context,
+                  icon: Icons.person_outline_rounded,
+                  label: 'Meu Perfil',
+                  aba: DrawerAba.perfil,
                 ),
                 const SizedBox(height: 16),
                 _buildSectionLabel('EMERGÊNCIA'),
@@ -249,10 +258,12 @@ class AppDrawer extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: () {
-            onAbaChanged(aba);
+            // ✅ Fecha o drawer ANTES de navegar — evita pop indevido
+            // de uma rota recém-empurrada por pushReplacement.
             if (!isFixed && Navigator.canPop(context)) {
               Navigator.of(context).pop();
             }
+            onAbaChanged(aba);
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

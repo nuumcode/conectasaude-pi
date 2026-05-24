@@ -16,6 +16,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_wrapper.dart';
 import 'features/auth/login_cidadao_screen.dart';
@@ -26,6 +27,7 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  usePathUrlStrategy();
   await AppTheme.lockPortrait();
   AppTheme.applySystemUI();
   await Firebase.initializeApp(

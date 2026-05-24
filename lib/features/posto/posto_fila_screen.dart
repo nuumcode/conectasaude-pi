@@ -13,13 +13,15 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import '../../core/theme/app_theme.dart';
+import '../core/theme/app_theme.dart';
 import '/services/fila_service.dart';
+
 class PostoFilaScreen extends StatefulWidget {
   const PostoFilaScreen({super.key});
   @override
   State<PostoFilaScreen> createState() => _PostoFilaScreenState();
 }
+
 class _PostoFilaScreenState extends State<PostoFilaScreen> {
   final _filaSvc = FilaService.instance;
   @override
@@ -27,6 +29,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
     super.initState();
     initializeDateFormatting('pt_BR');
   }
+
   // ── Helpers derivados do snapshot ──────────────────────────
   PacienteNaFila? _pacienteAtual(List<PacienteNaFila> fila) =>
       fila.where((p) => p.status == StatusFila.emAtendimento).firstOrNull;
@@ -35,6 +38,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ..sort((a, b) => a.horaChegada.compareTo(b.horaChegada));
     return lista;
   }
+
   int _aguardando(List<PacienteNaFila> fila) =>
       fila.where((p) => p.status == StatusFila.aguardando).length;
   int _atendidos(List<PacienteNaFila> fila) =>
@@ -96,6 +100,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ),
     );
   }
+
   Widget _buildHeader() {
     final now = DateTime.now();
     final dateStr =
@@ -198,6 +203,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ),
     );
   }
+
   Widget _buildWideLayout(List<PacienteNaFila> fila) {
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -211,6 +217,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ),
     );
   }
+
   Widget _buildNarrowLayout(List<PacienteNaFila> fila) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -223,6 +230,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ),
     );
   }
+
   Widget _buildPacienteAtualCard(List<PacienteNaFila> fila) {
     final pac = _pacienteAtual(fila);
     return Container(
@@ -302,6 +310,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ),
     );
   }
+
   Widget _buildSenhaGrande(String senha) {
     return Column(
       children: [
@@ -336,6 +345,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ],
     );
   }
+
   Widget _buildPacienteInfo(PacienteNaFila pac) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,6 +375,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ],
     );
   }
+
   Widget _infoRow(IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -387,6 +398,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ),
     );
   }
+
   Widget _timeChip(IconData icon, String time, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -425,6 +437,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ),
     );
   }
+
   Widget _buildActionButtons(PacienteNaFila? pacAtual) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -518,6 +531,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       },
     );
   }
+
   Widget _buildFilaAoVivo(List<PacienteNaFila> fila) {
     final espera = _filaEspera(fila);
     return Container(
@@ -604,6 +618,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ),
     );
   }
+
   Widget _buildFilaItem(PacienteNaFila pac, int posicao) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -675,6 +690,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ),
     );
   }
+
   Widget _buildBottomStats(List<PacienteNaFila> fila) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -694,12 +710,13 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
           _statItem(Icons.check_circle_rounded, '${_atendidos(fila)}',
               'Atendidos', _kGreen),
           _statDivider(),
-          _statItem(
-              Icons.groups_rounded, '${fila.length}', 'Fila completa', _kPrimary),
+          _statItem(Icons.groups_rounded, '${fila.length}', 'Fila completa',
+              _kPrimary),
         ],
       ),
     );
   }
+
   Widget _statItem(IconData icon, String value, String label, Color color) {
     return Expanded(
       child: Column(
@@ -737,9 +754,11 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       ),
     );
   }
+
   Widget _statDivider() {
     return Container(width: 1, height: 30, color: const Color(0xFFE2E8F0));
   }
+
   // ── Ações ──────────────────────────────────────────────────
   Future<void> _chamarProximo() async {
     try {
@@ -775,8 +794,8 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro: $e',
-              style: const TextStyle(fontFamily: 'Poppins')),
+          content:
+              Text('Erro: $e', style: const TextStyle(fontFamily: 'Poppins')),
           backgroundColor: _kRed,
           behavior: SnackBarBehavior.floating,
           shape:
@@ -785,6 +804,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       );
     }
   }
+
   Future<void> _finalizarAtendimento(PacienteNaFila pac) async {
     try {
       await _filaSvc.finalizarAtendimento(pac.id);
@@ -808,8 +828,8 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro: $e',
-              style: const TextStyle(fontFamily: 'Poppins')),
+          content:
+              Text('Erro: $e', style: const TextStyle(fontFamily: 'Poppins')),
           backgroundColor: _kRed,
           behavior: SnackBarBehavior.floating,
           shape:
@@ -818,6 +838,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
       );
     }
   }
+
   Future<void> _registrarAusencia(PacienteNaFila atual) async {
     try {
       await _filaSvc.atualizarStatus(atual.id, StatusFila.ausente);

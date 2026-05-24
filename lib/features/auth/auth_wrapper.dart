@@ -17,6 +17,7 @@
 
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -168,6 +169,15 @@ class _AuthWrapperState extends State<AuthWrapper>
 
   Future<void> _navigate() async {
     if (!mounted) return;
+
+    // ✅ PONTO CRÍTICO PARA DEEP LINKS:
+    // Se o usuário entrou direto por uma URL tipo /admin, o Flutter empilha 
+    // o /admin sobre o /. Se o AuthWrapper (que está no /) chamar 
+    // pushReplacement agora, ele vai substituir o /admin pelo /login.
+    // Verificamos se ainda somos a rota "topo". Se não for, paramos por aqui.
+    if (ModalRoute.of(context)?.isCurrent == false) {
+      return;
+    }
 
     // Se o destino ainda não foi resolvido (Firestore lento),
     // aguarda mais um pouco antes de navegar

@@ -8,11 +8,13 @@
 //  ✅ AppBar com hamburguer em mobile, sem ele no desktop
 //  ✅ Layout desktop: drawer fixo + conteúdo Expanded
 //  ✅ Layout mobile: AppBar + Drawer lateral + BottomNav
+//  ✅ Drawer "Meu Perfil" navega para /perfil (PerfilScreen)
 // ═══════════════════════════════════════════════════════════════════
 
 import 'package:conecta_saude_pi/features/auth/login_cidadao_screen.dart';
-import 'package:conecta_saude_pi/features/cidadao/ver_escala/cidadao_escala_screen.dart';
-import 'package:conecta_saude_pi/features/cidadao/minha_fila/cidadao_fila_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/cidadao_escala_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/cidadao_fila_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/perfil_screen.dart';
 import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
 import 'package:conecta_saude_pi/features/widgets/app_header.dart';
 import 'package:flutter/material.dart';
@@ -119,6 +121,8 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
         return const CidadaoEscalaScreen();
       case DrawerAba.fila:
         return const CidadaoFilaScreen();
+      case DrawerAba.perfil:
+        return const PerfilScreen();
       // Abas futuras — descomente quando as telas existirem:
       // case DrawerAba.prontuarios:  return const CidadaoProntuariosScreen();
       // case DrawerAba.vacinacao:    return const CidadaoVacinacaoScreen();

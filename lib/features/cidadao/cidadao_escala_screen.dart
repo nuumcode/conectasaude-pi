@@ -6,7 +6,7 @@
 //  ✅ BottomNav mobile com navegação entre telas
 //  ✅ Conteúdo de Escala Médica preservado dentro do layout reutilizável
 // ═══════════════════════════════════════════════════════════════════
-import 'package:conecta_saude_pi/features/cidadao/minha_fila/cidadao_fila_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/cidadao_fila_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -14,13 +14,15 @@ import 'package:conecta_saude_pi/features/auth/login_cidadao_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/dashboard_cidadao.dart';
 import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
 import 'package:conecta_saude_pi/features/widgets/app_header.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/animations/app_animations.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/animations/app_animations.dart';
+
 class CidadaoEscalaScreen extends StatefulWidget {
   const CidadaoEscalaScreen({super.key});
   @override
   State<CidadaoEscalaScreen> createState() => _CidadaoEscalaScreenState();
 }
+
 class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
   // ── Layout / scaffold ──────────────────────────────────────────
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -30,6 +32,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
     final name = _user?.displayName ?? _user?.email ?? 'Usuário';
     return name.split(' ').first;
   }
+
   // ── Estado da escala ───────────────────────────────────────────
   final _searchCtrl = TextEditingController();
   int _filtroSelecionado = 0;
@@ -43,7 +46,12 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
   static const _kStar = Color(0xFFFFC107);
   static const _kGreen = Color(0xFF10B981);
   static const _kRed = Color(0xFFEF4444);
-  final _filtros = ['Especialidade', 'Localização', 'Avaliação', 'Disponibilidade'];
+  final _filtros = [
+    'Especialidade',
+    'Localização',
+    'Avaliação',
+    'Disponibilidade'
+  ];
   final _profissionais = <_Profissional>[
     _Profissional(
       nome: 'Dra. Ana Clar',
@@ -112,23 +120,25 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
             p.clinica.toLowerCase().contains(query))
         .toList();
   }
+
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
   }
+
   // ── Logout ──────────────────────────────────────────────────────
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
     try {
-        await GoogleSignIn().signOut();
-
+      await GoogleSignIn().signOut();
     } catch (_) {}
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       AppFadeRoute(page: const LoginCidadaoScreen()),
     );
   }
+
   // ── Navegação ───────────────────────────────────────────────────
   void _onAbaChanged(dynamic aba) {
     if (aba == _abaDestaScreen) return;
@@ -163,6 +173,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
         return null;
     }
   }
+
   // ── Build ───────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -185,6 +196,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       bottomNavigationBar: isDesktop ? null : _buildBottomNav(),
     );
   }
+
   Widget _buildDesktop() {
     return Row(children: [
       SizedBox(
@@ -213,6 +225,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       ),
     ]);
   }
+
   Widget _buildMobile() {
     return Column(children: [
       AppHeader(
@@ -224,6 +237,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       Expanded(child: _buildConteudo()),
     ]);
   }
+
   Widget _buildBottomNav() {
     return Container(
       decoration: const BoxDecoration(
@@ -259,13 +273,15 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
           BottomNavigationBarItem(
               icon: Icon(Icons.folder_outlined), label: 'Prontuários'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline_rounded), label: 'Mensagens'),
+              icon: Icon(Icons.chat_bubble_outline_rounded),
+              label: 'Mensagens'),
           BottomNavigationBarItem(
               icon: Icon(Icons.menu_rounded), label: 'Mais'),
         ],
       ),
     );
   }
+
   // ═══════════════════════════════════════════════════════════════
   //  Conteúdo (preserva a UI original)
   // ═══════════════════════════════════════════════════════════════
@@ -292,14 +308,14 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
                       childAspectRatio: 0.72,
                     ),
                     itemCount: _filtrados.length,
-                    itemBuilder: (_, i) =>
-                        _buildDoctorGridCard(_filtrados[i]),
+                    itemBuilder: (_, i) => _buildDoctorGridCard(_filtrados[i]),
                   ),
           ),
         ],
       ),
     );
   }
+
   Widget _buildTituloEFiltros(bool isSmall, double hPad) {
     return Container(
       width: double.infinity,
@@ -349,6 +365,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       ),
     );
   }
+
   Widget _buildSearchBar(bool isSmall) {
     return Container(
       height: 44,
@@ -406,6 +423,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       ),
     );
   }
+
   Widget _buildFiltros() {
     return SizedBox(
       height: 32,
@@ -442,6 +460,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       ),
     );
   }
+
   Widget _buildDoctorGridCard(_Profissional prof) {
     return GestureDetector(
       onTap: prof.disponivel ? () => _openAgendamento(prof) : null,
@@ -450,9 +469,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
           color: _kCardBg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-              color: prof.disponivel
-                  ? _kPrimary.withOpacity(0.12)
-                  : _kDivider),
+              color: prof.disponivel ? _kPrimary.withOpacity(0.12) : _kDivider),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.03),
@@ -605,6 +622,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       ),
     );
   }
+
   void _openAgendamento(_Profissional prof) {
     showModalBottomSheet(
       context: context,
@@ -613,6 +631,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       builder: (_) => _AgendamentoSheet(profissional: prof),
     );
   }
+
   Widget _buildEmpty() {
     return Center(
       child: Column(
@@ -647,6 +666,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
     );
   }
 }
+
 // ─────────────────────────────────────────────────────────────
 //  Bottom Sheet — Agendar Consulta (preservado do original)
 // ─────────────────────────────────────────────────────────────
@@ -656,6 +676,7 @@ class _AgendamentoSheet extends StatefulWidget {
   @override
   State<_AgendamentoSheet> createState() => _AgendamentoSheetState();
 }
+
 class _AgendamentoSheetState extends State<_AgendamentoSheet> {
   static const _kPrimary = Color(0xFF1565D8);
   static const _kPrimaryDark = Color(0xFF0D47A1);
@@ -671,8 +692,15 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
   String _tipoConsulta = 'Consulta';
   final _motivoCtrl = TextEditingController();
   final _horarios = [
-    '09:00', '10:00', '11:00', '12:00',
-    '13:00', '14:00', '15:00', '16:00', '17:00'
+    '09:00',
+    '10:00',
+    '11:00',
+    '12:00',
+    '13:00',
+    '14:00',
+    '15:00',
+    '16:00',
+    '17:00'
   ];
   final _diasDisponiveis = [3, 5, 7, 10, 12, 14, 17, 19, 21, 24, 26, 28];
   @override
@@ -680,6 +708,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
     _motivoCtrl.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
@@ -702,15 +731,18 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildStepSection(1, 'Selecionar Médico', _buildMedicoSelected()),
+                  _buildStepSection(
+                      1, 'Selecionar Médico', _buildMedicoSelected()),
                   const SizedBox(height: 20),
                   _buildStepSection(2, 'Selecionar Data', _buildCalendar()),
                   const SizedBox(height: 20),
                   _buildStepSection(3, 'Selecionar Horário', _buildHorarios()),
                   const SizedBox(height: 20),
-                  _buildStepSection(4, 'Tipo de Consulta', _buildTipoConsulta()),
+                  _buildStepSection(
+                      4, 'Tipo de Consulta', _buildTipoConsulta()),
                   const SizedBox(height: 20),
-                  _buildStepSection(5, 'Descrição / Motivo da Consulta', _buildMotivo()),
+                  _buildStepSection(
+                      5, 'Descrição / Motivo da Consulta', _buildMotivo()),
                   const SizedBox(height: 28),
                   _buildActionButtons(),
                 ],
@@ -721,6 +753,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
       ),
     );
   }
+
   Widget _buildSheetHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
@@ -771,6 +804,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
       ),
     );
   }
+
   Widget _buildStepSection(int step, String title, Widget content) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -815,6 +849,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
       ],
     );
   }
+
   Widget _buildMedicoSelected() {
     final prof = widget.profissional;
     return Container(
@@ -863,6 +898,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
       ),
     );
   }
+
   Widget _buildCalendar() {
     final daysInMonth = DateUtils.getDaysInMonth(_selectedYear, _selectedMonth);
     final firstWeekday = DateTime(_selectedYear, _selectedMonth, 1).weekday;
@@ -954,8 +990,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: List.generate(7, (dayOfWeek) {
-                  final dayIndex =
-                      week * 7 + dayOfWeek - (firstWeekday - 1);
+                  final dayIndex = week * 7 + dayOfWeek - (firstWeekday - 1);
                   if (dayIndex < 1 || dayIndex > daysInMonth) {
                     return const SizedBox(width: 32, height: 32);
                   }
@@ -968,8 +1003,8 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
                       _selectedYear == DateTime.now().year;
                   return GestureDetector(
                     onTap: isAvailable
-                        ? () => setState(() => _selectedDate = DateTime(
-                            _selectedYear, _selectedMonth, dayIndex))
+                        ? () => setState(() => _selectedDate =
+                            DateTime(_selectedYear, _selectedMonth, dayIndex))
                         : null,
                     child: Container(
                       width: 32,
@@ -1012,7 +1047,8 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                      color: _kPrimary, borderRadius: BorderRadius.circular(2))),
+                      color: _kPrimary,
+                      borderRadius: BorderRadius.circular(2))),
               const SizedBox(width: 6),
               const Text('Dias disponíveis',
                   style: TextStyle(
@@ -1025,6 +1061,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
       ),
     );
   }
+
   Widget _buildHorarios() {
     return Wrap(
       spacing: 8,
@@ -1062,6 +1099,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
       }).toList(),
     );
   }
+
   Widget _buildTipoConsulta() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -1087,6 +1125,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
       ),
     );
   }
+
   Widget _buildMotivo() {
     return Container(
       decoration: BoxDecoration(
@@ -1109,6 +1148,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
       ),
     );
   }
+
   Widget _buildActionButtons() {
     return Row(
       children: [
@@ -1168,6 +1208,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
     );
   }
 }
+
 class _Profissional {
   final String nome;
   final String especialidade;

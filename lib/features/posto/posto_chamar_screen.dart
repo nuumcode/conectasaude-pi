@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../core/theme/app_theme.dart';
+
 // ─────────────────────────────────────────────────────────────
 //  PostoChamarScreen — Painel do Profissional de Saúde
 //  Dashboard com resumo do dia, ações rápidas e próximas consultas
@@ -10,6 +11,7 @@ class PostoChamarScreen extends StatefulWidget {
   @override
   State<PostoChamarScreen> createState() => _PostoChamarScreenState();
 }
+
 class _PostoChamarScreenState extends State<PostoChamarScreen> {
   int _navIndex = 0;
   // Cores auxiliares tema claro
@@ -29,11 +31,15 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
     filaVirtualAguardando: 3,
   );
   final _consultas = <_Consulta>[
-    _Consulta('Maria Oliveira', 'Consulta presencial', '08:30', const Color(0xFF4A9FFF)),
+    _Consulta('Maria Oliveira', 'Consulta presencial', '08:30',
+        const Color(0xFF4A9FFF)),
     _Consulta('Carlos Mendes', 'Consulta', '09:15', const Color(0xFF00B894)),
-    _Consulta('Ana Paula Santos', 'Consulta presencial', '10:00', const Color(0xFF9B59B6)),
-    _Consulta('João Pereira', 'Consulta presencial', '10:45', const Color(0xFFE67E22)),
-    _Consulta('Fernanda Lima', 'Consulta presencial', '11:30', const Color(0xFF1A72FF)),
+    _Consulta('Ana Paula Santos', 'Consulta presencial', '10:00',
+        const Color(0xFF9B59B6)),
+    _Consulta('João Pereira', 'Consulta presencial', '10:45',
+        const Color(0xFFE67E22)),
+    _Consulta('Fernanda Lima', 'Consulta presencial', '11:30',
+        const Color(0xFF1A72FF)),
   ];
   @override
   Widget build(BuildContext context) {
@@ -71,6 +77,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       bottomNavigationBar: _buildBottomNav(isSmall),
     );
   }
+
   // ── Header com avatar e info do profissional ───────────────
   Widget _buildHeader(bool isSmall) {
     return Container(
@@ -174,6 +181,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       ),
     );
   }
+
   // ── Resumo do dia ──────────────────────────────────────────
   Widget _buildResumoSection(bool isSmall) {
     return Column(
@@ -191,8 +199,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 )),
             Row(
               children: [
-                Icon(Icons.calendar_today_rounded,
-                    size: 14, color: _textMuted),
+                Icon(Icons.calendar_today_rounded, size: 14, color: _textMuted),
                 const SizedBox(width: 6),
                 Text(
                   _getDataHoje(),
@@ -252,6 +259,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       ],
     );
   }
+
   Widget _buildStatCard({
     required double width,
     required IconData icon,
@@ -325,6 +333,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       ),
     );
   }
+
   // ── Ações rápidas ──────────────────────────────────────────
   Widget _buildAcoesRapidas(bool isSmall) {
     return Column(
@@ -374,6 +383,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       ],
     );
   }
+
   Widget _buildAcaoBtn({
     required IconData icon,
     required String label,
@@ -430,6 +440,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       ),
     );
   }
+
   // ── Próximas consultas ─────────────────────────────────────
   Widget _buildProximasConsultas(bool isSmall) {
     return Column(
@@ -460,11 +471,13 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
         SizedBox(height: isSmall ? 12 : 14),
         ...List.generate(_consultas.length, (i) {
           final consulta = _consultas[i];
-          return _buildConsultaItem(consulta, isSmall, i == _consultas.length - 1);
+          return _buildConsultaItem(
+              consulta, isSmall, i == _consultas.length - 1);
         }),
       ],
     );
   }
+
   Widget _buildConsultaItem(_Consulta consulta, bool isSmall, bool isLast) {
     return Container(
       margin: EdgeInsets.only(bottom: isLast ? 0 : 1),
@@ -475,8 +488,10 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(isLast ? 12 : 0).copyWith(
-          topLeft: Radius.circular(isLast ? 0 : (_consultas.indexOf(consulta) == 0 ? 12 : 0)),
-          topRight: Radius.circular(isLast ? 0 : (_consultas.indexOf(consulta) == 0 ? 12 : 0)),
+          topLeft: Radius.circular(
+              isLast ? 0 : (_consultas.indexOf(consulta) == 0 ? 12 : 0)),
+          topRight: Radius.circular(
+              isLast ? 0 : (_consultas.indexOf(consulta) == 0 ? 12 : 0)),
           bottomLeft: Radius.circular(isLast ? 12 : 0),
           bottomRight: Radius.circular(isLast ? 12 : 0),
         ),
@@ -555,6 +570,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       ),
     );
   }
+
   // ── Bottom Navigation Bar ──────────────────────────────────
   Widget _buildBottomNav(bool isSmall) {
     final items = [
@@ -614,16 +630,28 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       ),
     );
   }
+
   // ── Utils ──────────────────────────────────────────────────
   String _getDataHoje() {
     final meses = [
-      'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-      'jul', 'ago', 'set', 'out', 'nov', 'dez',
+      'jan',
+      'fev',
+      'mar',
+      'abr',
+      'mai',
+      'jun',
+      'jul',
+      'ago',
+      'set',
+      'out',
+      'nov',
+      'dez',
     ];
     final now = DateTime.now();
     return '${now.day} de ${meses[now.month - 1]}, ${now.year}';
   }
 }
+
 // ─────────────────────────────────────────────────────────────
 //  Models
 // ─────────────────────────────────────────────────────────────
@@ -632,6 +660,7 @@ class _DadosProfissional {
   final String especialidade;
   _DadosProfissional({required this.nome, required this.especialidade});
 }
+
 class _ResumoDia {
   final int pacientesCadastrados;
   final int consultasHoje;
@@ -642,6 +671,7 @@ class _ResumoDia {
     required this.filaVirtualAguardando,
   });
 }
+
 class _Consulta {
   final String nome;
   final String tipo;
@@ -649,6 +679,7 @@ class _Consulta {
   final Color avatarColor;
   _Consulta(this.nome, this.tipo, this.horario, this.avatarColor);
 }
+
 class _NavItem {
   final IconData icon;
   final String label;

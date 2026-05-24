@@ -5,17 +5,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:conecta_saude_pi/features/auth/login_cidadao_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/dashboard_cidadao.dart';
-import 'package:conecta_saude_pi/features/cidadao/ver_escala/cidadao_escala_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/cidadao_escala_screen.dart';
 import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
 import 'package:conecta_saude_pi/features/widgets/app_header.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/animations/app_animations.dart';
-import '../../../services/fila_service.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/animations/app_animations.dart';
+import '../../services/fila_service.dart';
+
 class CidadaoFilaScreen extends StatefulWidget {
   const CidadaoFilaScreen({super.key});
   @override
   State<CidadaoFilaScreen> createState() => _CidadaoFilaScreenState();
 }
+
 class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
     with TickerProviderStateMixin {
   // ── Layout / scaffold ──────────────────────────────────────────
@@ -42,11 +44,13 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
     final name = _user?.displayName ?? _user?.email ?? 'Usuário';
     return name.split(' ').first;
   }
+
   @override
   void dispose() {
     _pulseCtrl.dispose();
     super.dispose();
   }
+
   // ── Logout ──────────────────────────────────────────────────────
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
@@ -58,6 +62,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       AppFadeRoute(page: const LoginCidadaoScreen()),
     );
   }
+
   // ── Navegação ───────────────────────────────────────────────────
   void _onAbaChanged(dynamic aba) {
     if (aba == _abaDestaScreen) return;
@@ -71,6 +76,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ));
     }
   }
+
   Widget? _resolverAba(dynamic aba) {
     switch (aba) {
       case DrawerAba.inicio:
@@ -83,6 +89,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
         return null;
     }
   }
+
   // ── Build ────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -105,6 +112,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       bottomNavigationBar: isDesktop ? null : _buildBottomNav(),
     );
   }
+
   Widget _buildDesktop() {
     return Row(children: [
       SizedBox(
@@ -133,6 +141,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ),
     ]);
   }
+
   Widget _buildMobile() {
     return Column(children: [
       AppHeader(
@@ -144,6 +153,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       Expanded(child: _buildConteudo()),
     ]);
   }
+
   Widget _buildBottomNav() {
     return Container(
       decoration: const BoxDecoration(
@@ -151,7 +161,8 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
         border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
       ),
       child: BottomNavigationBar(
-        currentIndex: 2, // índice da aba Fila — ajuste se o seu BottomNav usar outra posição
+        currentIndex:
+            2, // índice da aba Fila — ajuste se o seu BottomNav usar outra posição
         onTap: (i) {
           const mapa = [
             DrawerAba.inicio,
@@ -179,13 +190,15 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
           BottomNavigationBarItem(
               icon: Icon(Icons.groups_rounded), label: 'Fila'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline_rounded), label: 'Mensagens'),
+              icon: Icon(Icons.chat_bubble_outline_rounded),
+              label: 'Mensagens'),
           BottomNavigationBarItem(
               icon: Icon(Icons.menu_rounded), label: 'Mais'),
         ],
       ),
     );
   }
+
   // ── Conteúdo (lógica da fila preservada) ─────────────────────────
   Widget _buildConteudo() {
     final mq = MediaQuery.of(context);
@@ -251,6 +264,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
             ),
     );
   }
+
   // ── Posição calculada a partir do snapshot ─────────────────
   int _calcularPosicao(PacienteNaFila meu, List<PacienteNaFila> fila) {
     if (meu.status == StatusFila.emAtendimento) return 0;
@@ -262,6 +276,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
     final idx = aguardando.indexWhere((p) => p.id == meu.id);
     return idx + 1;
   }
+
   // ─────────────────────────────────────────────────────────────
   //  Tela quando o cidadão AINDA NÃO PEGOU senha
   // ─────────────────────────────────────────────────────────────
@@ -323,6 +338,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ],
     );
   }
+
   Future<void> _pegarSenha() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -339,6 +355,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       );
     }
   }
+
   // ─────────────────────────────────────────────────────────────
   //  Tela quando JÁ TEM senha
   // ─────────────────────────────────────────────────────────────
@@ -398,6 +415,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ],
     );
   }
+
   // ── Logo ────────────────────────────────────────────────────
   Widget _buildLogoSection(bool isSmall) {
     return Row(
@@ -437,6 +455,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ],
     );
   }
+
   Widget _buildNotificacaoBanner(bool isSmall) {
     return Container(
       width: double.infinity,
@@ -487,6 +506,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ),
     );
   }
+
   Widget _buildPosicaoCircular({
     required double circleSize,
     required bool isSmall,
@@ -628,6 +648,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ),
     );
   }
+
   Widget _buildInfoRow({
     required bool isSmall,
     required bool isLarge,
@@ -683,6 +704,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ),
     );
   }
+
   Widget _buildDottedDivider() => CustomPaint(
         size: const Size(1, 50),
         painter: _DottedLinePainter(color: _dividerColor),
@@ -721,6 +743,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ],
     );
   }
+
   Widget _infoColumnStatus(bool isSmall, bool foiChamado) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -768,6 +791,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ],
     );
   }
+
   Widget _buildPessoasAFrente(
       PacienteNaFila meu, List<PacienteNaFila> fila, bool isSmall) {
     if (meu.status != StatusFila.aguardando) return const SizedBox.shrink();
@@ -812,6 +836,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ),
     );
   }
+
   Widget _buildPessoaItem(int posicao, String senha, bool isSmall) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -854,6 +879,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ),
     );
   }
+
   Widget _buildRealTimeCard(bool isSmall) {
     return Container(
       width: double.infinity,
@@ -895,6 +921,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ),
     );
   }
+
   Widget _buildBotaoSairFila(PacienteNaFila pac, bool isSmall) {
     return SizedBox(
       width: double.infinity,
@@ -920,13 +947,13 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
       ),
     );
   }
+
   Future<void> _confirmarSaida(PacienteNaFila pac) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Sair da fila?',
             style: TextStyle(
               color: _textDark,
@@ -944,8 +971,8 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar',
-                  style: TextStyle(color: _textMuted))),
+              child:
+                  const Text('Cancelar', style: TextStyle(color: _textMuted))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               child: const Text('Sim, sair',
@@ -961,6 +988,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
     }
   }
 }
+
 // ─────────────────────────────────────────────────────────────
 //  Painters
 // ─────────────────────────────────────────────────────────────
@@ -1010,10 +1038,12 @@ class _ProgressRingPainter extends CustomPainter {
       canvas.drawCircle(Offset(endX, endY), strokeWidth * 1.2, glowPaint);
     }
   }
+
   @override
   bool shouldRepaint(covariant _ProgressRingPainter old) =>
       old.progress != progress || old.glowOpacity != glowOpacity;
 }
+
 class _DottedLinePainter extends CustomPainter {
   final Color color;
   _DottedLinePainter({required this.color});
@@ -1034,6 +1064,7 @@ class _DottedLinePainter extends CustomPainter {
       startY += dashH + gapH;
     }
   }
+
   @override
   bool shouldRepaint(covariant _DottedLinePainter old) => old.color != color;
 }

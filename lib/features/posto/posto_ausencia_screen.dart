@@ -1,6 +1,7 @@
 // TODO Implement this library.
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../core/theme/app_theme.dart';
+
 // ─────────────────────────────────────────────────────────────
 //  PostoAusenciaScreen — Gestão de ausências/faltas de pacientes
 //  Permite registrar ausência e reconvocar pacientes
@@ -11,6 +12,7 @@ class PostoAusenciaScreen extends StatefulWidget {
   @override
   State<PostoAusenciaScreen> createState() => _PostoAusenciaScreenState();
 }
+
 class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
   final List<_Ausencia> _ausencias = [
     _Ausencia('Raimundo Nonato', 'A-10', 'Clínica Geral', '09:02', '09:20', 1),
@@ -58,7 +60,8 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
               // Perderam a vez
               _sectionTitle('Perderam a vez (3 chamadas)', perdidas.length),
               const SizedBox(height: 10),
-              ...perdidas.map((a) => _buildAusenciaCard(a, reconvocavel: false)),
+              ...perdidas
+                  .map((a) => _buildAusenciaCard(a, reconvocavel: false)),
               const SizedBox(height: 32),
             ],
           ),
@@ -66,6 +69,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
       ),
     );
   }
+
   Widget _buildResumo() {
     return Container(
       width: double.infinity,
@@ -121,6 +125,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
       ),
     );
   }
+
   Widget _sectionTitle(String title, int count) {
     return Row(
       children: [
@@ -149,6 +154,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
       ],
     );
   }
+
   Widget _buildAusenciaCard(_Ausencia aus, {required bool reconvocavel}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -168,7 +174,8 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEF5350).withOpacity(0.15),
                         borderRadius: BorderRadius.circular(6),
@@ -212,7 +219,8 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
                         )),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(4),
@@ -236,8 +244,9 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
             const SizedBox(width: 10),
             Column(
               children: [
-                _actionBtn('Reconvocar', Icons.campaign_rounded,
-                    AppColors.greenLt, () {
+                _actionBtn(
+                    'Reconvocar', Icons.campaign_rounded, AppColors.greenLt,
+                    () {
                   setState(() => aus.chamadas++);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -278,6 +287,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
       ),
     );
   }
+
   Widget _actionBtn(
       String label, IconData icon, Color cor, VoidCallback onTap) {
     return GestureDetector(
@@ -306,6 +316,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
     );
   }
 }
+
 class _Ausencia {
   final String nome;
   final String senha;
