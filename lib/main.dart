@@ -6,7 +6,7 @@
 //    /login      → LoginCidadaoScreen
 //    /home       → HomeCidadaoScreen
 //    /admin      → LoginAdminScreen
-//    /admin/home → DashboardCidadaoScreen (trocar pela tela admin real)
+//    /admin/home → SecretariaDashboardScreen
 //
 //  LÓGICA DO AuthWrapper:
 //    1. Usuário não logado       → /login
@@ -21,6 +21,7 @@ import 'features/auth/auth_wrapper.dart';
 import 'features/auth/login_cidadao_screen.dart';
 import 'features/auth/login_admin_screen.dart';
 import 'features/cidadao/dashboard_cidadao.dart';
+import 'features/secretaria/dashboard/secretaria_dashboard_screen.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -48,7 +49,7 @@ class ConectaSaudeApp extends StatelessWidget {
         '/login': (_) => const LoginCidadaoScreen(),
         '/home': (_) => const HomeCidadaoScreen(),
         '/admin': (_) => const LoginAdminScreen(),
-        '/admin/home': (_) => const LoginAdminScreen(),
+        '/admin/home': (_) => const SecretariaDashboardScreen(),
       },
     );
   }

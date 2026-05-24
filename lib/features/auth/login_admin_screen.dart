@@ -64,23 +64,9 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
   void initState() {
     super.initState();
 
-    // Verifica sessão ativa — se admin já logado redireciona direto
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null && mounted) {
-        final isAdmin = await _verificarAdmin(user.uid);
-        if (isAdmin && mounted) {
-          Navigator.of(context).pushReplacementNamed('/admin/home');
-          return;
-        }
-        // Logado mas não é admin — desloga silenciosamente
-        await FirebaseAuth.instance.signOut();
-      }
-      if (mounted) {
-        Future.delayed(const Duration(milliseconds: 400), () {
-          if (mounted) _entryCtrl.forward();
-        });
-      }
+    // Anima entrada do formulário
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) _entryCtrl.forward();
     });
   }
 

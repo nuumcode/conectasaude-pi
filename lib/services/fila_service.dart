@@ -1,7 +1,6 @@
 // lib/services/fila_service.dart
 //
 // Serviço de fila virtual conectado ao Cloud Firestore.
-// Substitui a versão in-memory baseada em ChangeNotifier.
 //
 // Estrutura no Firestore:
 //   filas/{filaId}/pacientes/{pacienteId}
@@ -39,6 +38,8 @@ class PacienteNaFila {
   final StatusFila status;
   final DateTime horaChegada;
   final String? userId;
+  var sus;
+  var cpf;
   PacienteNaFila({
     required this.id,
     required this.nome,
@@ -71,6 +72,7 @@ class PacienteNaFila {
     final m = horaChegada.minute.toString().padLeft(2, '0');
     return '$h:$m';
   }
+  String get chamadaFormatada => '$senha - $nome';
 }
 // ─────────────────────────────────────────────────────────────
 //  Serviço
@@ -80,8 +82,6 @@ class FilaService {
   static final FilaService instance = FilaService._();
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   /// Identificador da fila atualmente ativa.
-  /// Pode ser `postoId`, `postoId_especialidade`, etc.
-  /// Trocar via [setFila] quando o usuário escolher outro posto/especialidade.
   String _filaId = 'ubs_centro_clinica_geral';
   String get filaId => _filaId;
   void setFila(String id) => _filaId = id;
@@ -92,7 +92,7 @@ class FilaService {
       _filaRef.collection('pacientes');
   // ── Streams ───────────────────────────────────────────────
   /// Toda a fila, ordenada por chegada.
-  /// Usado pela PostoFilaScreen.
+  /// Usado pela PostoFilaScreen e CidadaoFilaScreen.
   Stream<List<PacienteNaFila>> streamFila() {
     return _pacientesRef
         .orderBy('horaChegada')
@@ -100,7 +100,6 @@ class FilaService {
         .map((snap) => snap.docs.map(PacienteNaFila.fromDoc).toList());
   }
   /// Apenas o paciente do usuário atual (para a tela do cidadão).
-  /// Retorna null se ele ainda não pegou senha.
   Stream<PacienteNaFila?> streamMeuPaciente(String userId) {
     return _pacientesRef
         .where('userId', isEqualTo: userId)
@@ -122,12 +121,10 @@ class FilaService {
       final filaSnap = await tx.get(_filaRef);
       final atual = (filaSnap.data()?['proximaSenha'] as int?) ?? 1;
       final senha = 'A-${atual.toString().padLeft(2, '0')}';
-      // Atualiza/cria o documento da fila
       tx.set(_filaRef, {
         'proximaSenha': atual + 1,
         'atualizadoEm': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      // Cria o paciente
       final docRef = _pacientesRef.doc();
       final hora = DateTime.now();
       tx.set(docRef, {
@@ -154,28 +151,74 @@ class FilaService {
     await _pacientesRef.doc(pacienteId).delete();
   }
   // ── Ações do posto ────────────────────────────────────────
-  /// Atualiza o status de um paciente — usado pela PostoFilaScreen.
+  /// Atualiza o status de um paciente.
   Future<void> atualizarStatus(String pacienteId, StatusFila novoStatus) async {
     await _pacientesRef.doc(pacienteId).update({
       'status': novoStatus.value,
       'atualizadoEm': FieldValue.serverTimestamp(),
     });
   }
+  /// Finaliza o atendimento atual — marca como atendido.
+  Future<void> finalizarAtendimento(String pacienteId) =>
+      atualizarStatus(pacienteId, StatusFila.atendido);
   /// Chama o próximo paciente aguardando (mais antigo na fila).
-  /// Retorna o paciente que foi marcado como em atendimento, ou null.
+  ///
+  /// Comportamento:
+  /// - Se já existe paciente "em atendimento", finaliza ele (vira "atendido")
+  ///   antes de chamar o próximo.
+  /// - Usa transação para evitar race condition (dois atendentes clicando
+  ///   "Chamar Próximo" ao mesmo tempo não chamam o mesmo paciente).
+  /// - Retorna o paciente recém-chamado, ou null se a fila estava vazia.
   Future<PacienteNaFila?> chamarProximo() async {
-    final query = await _pacientesRef
+    // 1. Busca o próximo aguardando (mais antigo)
+    final aguardandoQuery = await _pacientesRef
         .where('status', isEqualTo: StatusFila.aguardando.value)
         .orderBy('horaChegada')
         .limit(1)
         .get();
-    if (query.docs.isEmpty) return null;
-    final doc = query.docs.first;
-    await doc.reference.update({
-      'status': StatusFila.emAtendimento.value,
-      'atualizadoEm': FieldValue.serverTimestamp(),
+    // 2. Busca paciente atualmente em atendimento (se houver)
+    final emAtendimentoQuery = await _pacientesRef
+        .where('status', isEqualTo: StatusFila.emAtendimento.value)
+        .limit(1)
+        .get();
+    if (aguardandoQuery.docs.isEmpty) return null;
+    final proximoRef = aguardandoQuery.docs.first.reference;
+    final atualRef = emAtendimentoQuery.docs.isEmpty
+        ? null
+        : emAtendimentoQuery.docs.first.reference;
+    // 3. Transação atômica: finaliza o atual + promove o próximo
+    return _db.runTransaction<PacienteNaFila>((tx) async {
+      // Releitura dentro da transação para garantir consistência
+      final proximoSnap = await tx.get(proximoRef);
+      if (!proximoSnap.exists) {
+        throw StateError('Paciente sumiu antes de ser chamado.');
+      }
+      // Finaliza atendimento anterior, se houver
+      if (atualRef != null) {
+        tx.update(atualRef, {
+          'status': StatusFila.atendido.value,
+          'atualizadoEm': FieldValue.serverTimestamp(),
+        });
+      }
+      // Promove o próximo
+      tx.update(proximoRef, {
+        'status': StatusFila.emAtendimento.value,
+        'atualizadoEm': FieldValue.serverTimestamp(),
+      });
+      // Reconstrói o paciente já com o status novo
+      final data = Map<String, dynamic>.from(proximoSnap.data() ?? {});
+      data['status'] = StatusFila.emAtendimento.value;
+      return PacienteNaFila(
+        id: proximoSnap.id,
+        nome: (data['nome'] as String?) ?? 'Sem nome',
+        senha: (data['senha'] as String?) ?? '---',
+        especialidade: (data['especialidade'] as String?) ?? 'Clínica Geral',
+        status: StatusFila.emAtendimento,
+        horaChegada:
+            (data['horaChegada'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        userId: data['userId'] as String?,
+      );
     });
-    return PacienteNaFila.fromDoc(doc);
   }
   /// Adiciona um paciente fictício (botão de simulação no posto).
   Future<void> simularNovoPaciente() async {
@@ -187,7 +230,6 @@ class FilaService {
     );
   }
   // ── Contadores síncronos a partir de uma lista ────────────
-  // (usados pelos widgets que já recebem a lista via StreamBuilder)
   static int aguardando(List<PacienteNaFila> fila) =>
       fila.where((p) => p.status == StatusFila.aguardando).length;
   static int atendidos(List<PacienteNaFila> fila) =>

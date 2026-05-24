@@ -23,6 +23,10 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
 
+import '../cidadao/dashboard_cidadao.dart';
+import '../secretaria/dashboard/secretaria_dashboard_screen.dart';
+import 'login_cidadao_screen.dart';
+
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
   @override
@@ -174,7 +178,24 @@ class _AuthWrapperState extends State<AuthWrapper>
       _destino ??= '/login';
     }
 
-    Navigator.of(context).pushReplacementNamed(_destino!);
+    // ✅ Transição suave com Hero e Fade para evitar o "pisca"
+    Widget page;
+    switch (_destino) {
+      case '/home':
+        page = const HomeCidadaoScreen();
+        break;
+      case '/admin/home':
+        page = const SecretariaDashboardScreen();
+        break;
+      case '/login':
+      default:
+        page = const LoginCidadaoScreen();
+        break;
+    }
+
+    Navigator.of(context).pushReplacement(
+      AppHeroFadeRoute(page: page),
+    );
   }
 
   @override

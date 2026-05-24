@@ -45,6 +45,7 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen>
   bool _senhaVis = false;
   bool _confirmaVis = false;
   bool _loading = false;
+  bool _firstTime = true; // Evita que a animação de entrada rode 2x
   String? _erro;
   _Modo _modo = _Modo.login;
 
@@ -58,14 +59,21 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen>
   void initState() {
     super.initState();
 
-    // ✅ PONTO 1 — Verificação de sessão ativa
-    // Se já há um usuário logado, redireciona direto para /home
-    // sem mostrar a tela de login nem piscar
-    // AuthWrapper já verificou a sessão antes de chegar aqui
-    // Basta animar o formulário
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) _formCtrl.forward();
+    // Inicia a animação de entrada logo de cara se já tivermos a logo
+    // ou após um curtíssimo delay para garantir o build inicial
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted && _firstTime) {
+        _formCtrl.forward();
+        _firstTime = false;
+      }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // ✅ Pré-carrega a logo para não "piscar" ao aparecer
+    precacheImage(const AssetImage('assets/logo-var01.png'), context);
   }
 
   @override

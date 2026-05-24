@@ -1,12 +1,15 @@
 // lib/features/cidadao/minha_fila/cidadao_fila_screen.dart
-//
-// Fila Virtual do Cidadão — agora ouvindo o Firestore em tempo real.
-// A posição é calculada a partir do snapshot completo da fila;
-// quando o atendente muda algo no posto, esta tela atualiza sozinha.
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:conecta_saude_pi/features/auth/login_cidadao_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/dashboard_cidadao.dart';
+import 'package:conecta_saude_pi/features/cidadao/ver_escala/cidadao_escala_screen.dart';
+import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
+import 'package:conecta_saude_pi/features/widgets/app_header.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/animations/app_animations.dart';
 import '../../../services/fila_service.dart';
 class CidadaoFilaScreen extends StatefulWidget {
   const CidadaoFilaScreen({super.key});
@@ -15,6 +18,10 @@ class CidadaoFilaScreen extends StatefulWidget {
 }
 class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
     with TickerProviderStateMixin {
+  // ── Layout / scaffold ──────────────────────────────────────────
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  static const _abaDestaScreen = DrawerAba.fila;
+  // ── Fila ───────────────────────────────────────────────────────
   final _fila = FilaService.instance;
   bool _bannerVisivel = true;
   late final AnimationController _pulseCtrl = AnimationController(
@@ -28,95 +35,220 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
   static const _textDark = Color(0xFF1A2138);
   static const _textMuted = Color(0xFF7B8794);
   static const _dividerColor = Color(0xFFDDE5EF);
-  String? get _userId => FirebaseAuth.instance.currentUser?.uid;
+  // ── Auth ───────────────────────────────────────────────────────
+  User? get _user => FirebaseAuth.instance.currentUser;
+  String? get _userId => _user?.uid;
+  String get _firstName {
+    final name = _user?.displayName ?? _user?.email ?? 'Usuário';
+    return name.split(' ').first;
+  }
   @override
   void dispose() {
     _pulseCtrl.dispose();
     super.dispose();
   }
+  // ── Logout ──────────────────────────────────────────────────────
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      AppFadeRoute(page: const LoginCidadaoScreen()),
+    );
+  }
+  // ── Navegação ───────────────────────────────────────────────────
+  void _onAbaChanged(dynamic aba) {
+    if (aba == _abaDestaScreen) return;
+    final Widget? destino = _resolverAba(aba);
+    if (destino != null) {
+      Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Em breve.'),
+        duration: Duration(seconds: 1),
+      ));
+    }
+  }
+  Widget? _resolverAba(dynamic aba) {
+    switch (aba) {
+      case DrawerAba.inicio:
+        return const HomeCidadaoScreen();
+      case DrawerAba.agendamentos:
+        return const CidadaoEscalaScreen();
+      case DrawerAba.fila:
+        return const CidadaoFilaScreen();
+      default:
+        return null;
+    }
+  }
+  // ── Build ────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final isDesktop = w >= 700;
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF4F7FB),
+      drawer: isDesktop
+          ? null
+          : AppDrawer(
+              userName: _user?.displayName ?? 'Usuário',
+              userEmail: _user?.email ?? '',
+              userPhoto: _user?.photoURL,
+              abaAtual: _abaDestaScreen,
+              onAbaChanged: _onAbaChanged,
+              onLogout: _logout,
+            ),
+      body: isDesktop ? _buildDesktop() : _buildMobile(),
+      bottomNavigationBar: isDesktop ? null : _buildBottomNav(),
+    );
+  }
+  Widget _buildDesktop() {
+    return Row(children: [
+      SizedBox(
+        width: 260,
+        child: AppDrawer(
+          userName: _user?.displayName ?? 'Usuário',
+          userEmail: _user?.email ?? '',
+          userPhoto: _user?.photoURL,
+          abaAtual: _abaDestaScreen,
+          onAbaChanged: _onAbaChanged,
+          onLogout: _logout,
+          isFixed: true,
+        ),
+      ),
+      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Expanded(
+        child: Column(children: [
+          AppHeader(
+            userName: _firstName,
+            userPhoto: _user?.photoURL,
+            onLogout: _logout,
+            onMenuPressed: null,
+          ),
+          Expanded(child: _buildConteudo()),
+        ]),
+      ),
+    ]);
+  }
+  Widget _buildMobile() {
+    return Column(children: [
+      AppHeader(
+        userName: _firstName,
+        userPhoto: _user?.photoURL,
+        onLogout: _logout,
+        onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+      ),
+      Expanded(child: _buildConteudo()),
+    ]);
+  }
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+      ),
+      child: BottomNavigationBar(
+        currentIndex: 2, // índice da aba Fila — ajuste se o seu BottomNav usar outra posição
+        onTap: (i) {
+          const mapa = [
+            DrawerAba.inicio,
+            DrawerAba.agendamentos,
+            DrawerAba.fila,
+            DrawerAba.mensagens,
+            DrawerAba.mais,
+          ];
+          _onAbaChanged(mapa[i]);
+        },
+        backgroundColor: Colors.white,
+        selectedItemColor: AppColors.bgMid,
+        unselectedItemColor: const Color(0xFF94A3B8),
+        selectedLabelStyle: const TextStyle(
+            fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600),
+        unselectedLabelStyle:
+            const TextStyle(fontFamily: 'Poppins', fontSize: 11),
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded), label: 'Início'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today_rounded), label: 'Agendamentos'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.groups_rounded), label: 'Fila'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline_rounded), label: 'Mensagens'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.menu_rounded), label: 'Mais'),
+        ],
+      ),
+    );
+  }
+  // ── Conteúdo (lógica da fila preservada) ─────────────────────────
+  Widget _buildConteudo() {
     final mq = MediaQuery.of(context);
     final screenW = mq.size.width;
     final screenH = mq.size.height;
     final isSmall = screenW < 360;
-    final isLarge = screenW > 420;
     final hPad = screenW * 0.05 < 16 ? 16.0 : screenW * 0.05;
     final circleSize = (screenW * 0.42).clamp(130.0, 200.0);
-    return Scaffold(
-      backgroundColor: _bgMain,
-      appBar: AppBar(
-        backgroundColor: AppColors.navyDeep,
-        elevation: 0,
-        title: Text('Fila Virtual',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: isSmall ? 16 : 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            )),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              color: Colors.white, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: _userId == null
-            ? const Center(
-                child: Text('Você precisa estar autenticado.',
-                    style: TextStyle(fontFamily: 'Poppins')))
-            : StreamBuilder<List<PacienteNaFila>>(
-                stream: _fila.streamFila(),
-                builder: (context, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snap.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          'Erro ao carregar a fila: ${snap.error}',
-                          style: const TextStyle(fontFamily: 'Poppins'),
-                          textAlign: TextAlign.center,
+    return Container(
+      color: _bgMain,
+      child: _userId == null
+          ? const Center(
+              child: Text('Você precisa estar autenticado.',
+                  style: TextStyle(fontFamily: 'Poppins')))
+          : StreamBuilder<List<PacienteNaFila>>(
+              stream: _fila.streamFila(),
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        'Erro ao carregar a fila: ${snap.error}',
+                        style: const TextStyle(fontFamily: 'Poppins'),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+                final fila = snap.data ?? const [];
+                final meuPaciente =
+                    fila.where((p) => p.userId == _userId).firstOrNull;
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: hPad,
+                        vertical: screenH * 0.02,
+                      ),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight - (screenH * 0.04),
                         ),
+                        child: meuPaciente == null
+                            ? _buildSemSenha(isSmall, screenH)
+                            : _buildComSenha(
+                                meuPaciente: meuPaciente,
+                                fila: fila,
+                                isSmall: isSmall,
+                                isLarge: screenW > 420,
+                                screenH: screenH,
+                                circleSize: circleSize,
+                              ),
                       ),
                     );
-                  }
-                  final fila = snap.data ?? const [];
-                  final meuPaciente =
-                      fila.where((p) => p.userId == _userId).firstOrNull;
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: hPad,
-                          vertical: screenH * 0.02,
-                        ),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight - (screenH * 0.04),
-                          ),
-                          child: meuPaciente == null
-                              ? _buildSemSenha(isSmall, screenH)
-                              : _buildComSenha(
-                                  meuPaciente: meuPaciente,
-                                  fila: fila,
-                                  isSmall: isSmall,
-                                  isLarge: isLarge,
-                                  screenH: screenH,
-                                  circleSize: circleSize,
-                                ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-      ),
+                  },
+                );
+              },
+            ),
     );
   }
   // ── Posição calculada a partir do snapshot ─────────────────
@@ -128,7 +260,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
         .toList()
       ..sort((a, b) => a.horaChegada.compareTo(b.horaChegada));
     final idx = aguardando.indexWhere((p) => p.id == meu.id);
-    return idx + 1; // 1-based
+    return idx + 1;
   }
   // ─────────────────────────────────────────────────────────────
   //  Tela quando o cidadão AINDA NÃO PEGOU senha
@@ -229,8 +361,6 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
     return Column(
       children: [
         SizedBox(height: screenH * 0.015),
-        _buildLogoSection(isSmall),
-        SizedBox(height: screenH * 0.018),
         if (_bannerVisivel) _buildNotificacaoBanner(isSmall),
         if (_bannerVisivel) SizedBox(height: screenH * 0.025),
         _buildPosicaoCircular(
@@ -273,28 +403,6 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          width: isSmall ? 34 : 40,
-          height: isSmall ? 34 : 40,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            gradient: const LinearGradient(
-              colors: [AppColors.navyMid, AppColors.blue],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.blue.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Icon(Icons.add_rounded,
-              color: Colors.white, size: isSmall ? 18 : 22),
-        ),
-        SizedBox(width: isSmall ? 8 : 10),
         RichText(
           text: TextSpan(children: [
             TextSpan(
@@ -854,7 +962,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
   }
 }
 // ─────────────────────────────────────────────────────────────
-//  Painters (mantidos do original)
+//  Painters
 // ─────────────────────────────────────────────────────────────
 class _ProgressRingPainter extends CustomPainter {
   final double progress;
