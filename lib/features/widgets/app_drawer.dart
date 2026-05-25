@@ -14,27 +14,44 @@ import '../../core/animations/app_animations.dart';
 // ⚠️ Os 5 primeiros valores DEVEM permanecer alinhados com _Aba do
 // HomeCidadaoScreen (inicio, agendamentos, prontuarios, mensagens, mais).
 // Novos valores devem ser adicionados ao final.
+enum UserRole { cidadao, secretaria, posto }
+
 enum DrawerAba {
-  inicio, // 0
-  agendamentos, // 1
-  prontuarios, // 2
-  mensagens, // 3
-  mais, // 4
-  vacinacao, // 5
-  fila, // 6
-  notificacoes, // 7
-  emergencia, // 8
-  perfil, // 9  ← novo
+  // Comuns/Cidadão
+  inicio,
+  agendamentos,
+  prontuarios,
+  mensagens,
+  mais,
+  vacinacao,
+  fila,
+  notificacoes,
+  emergencia,
+  perfil,
+
+  // Secretaria (Admin)
+  usuarios,
+  medicos,
+  escalas,
+  logs,
+  configuracoes,
+  relatorios,
+
+  // Posto
+  chamar,
+  ausencia,
 }
 
 class AppDrawer extends StatelessWidget {
   final String userName;
   final String userEmail;
   final String? userPhoto;
-  final dynamic abaAtual; // aceita DrawerAba ou enum compatível por índice
+  final dynamic abaAtual;
   final void Function(dynamic) onAbaChanged;
   final VoidCallback onLogout;
-  final bool isFixed; // true = desktop (sem borda arredondada)
+  final bool isFixed;
+  final UserRole role;
+
   const AppDrawer({
     super.key,
     required this.userName,
@@ -44,7 +61,9 @@ class AppDrawer extends StatelessWidget {
     required this.onAbaChanged,
     required this.onLogout,
     this.isFixed = false,
+    this.role = UserRole.cidadao,
   });
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -64,67 +83,157 @@ class AppDrawer extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionLabel('PRINCIPAL'),
-                _buildItem(
-                  context,
-                  icon: Icons.home_rounded,
-                  label: 'Início',
-                  aba: DrawerAba.inicio,
-                ),
-                const SizedBox(height: 16),
-                _buildSectionLabel('SAÚDE'),
-                _buildItem(
-                  context,
-                  icon: Icons.calendar_today_rounded,
-                  label: 'Escala/Agendamentos',
-                  aba: DrawerAba.agendamentos,
-                ),
-                _buildItem(
-                  context,
-                  icon: Icons.groups_rounded,
-                  label: 'Fila Virtual',
-                  aba: DrawerAba.fila,
-                ),
-                const SizedBox(height: 16),
-                _buildSectionLabel('COMUNICAÇÃO'),
-                _buildItem(
-                  context,
-                  icon: Icons.chat_bubble_outline_rounded,
-                  label: 'Mensagens',
-                  aba: DrawerAba.mensagens,
-                  badge: 2,
-                ),
-                _buildItem(
-                  context,
-                  icon: Icons.notifications_none_rounded,
-                  label: 'Notificações',
-                  aba: DrawerAba.notificacoes,
-                ),
-                const SizedBox(height: 16),
-                _buildSectionLabel('CONTA'),
-                _buildItem(
-                  context,
-                  icon: Icons.person_outline_rounded,
-                  label: 'Meu Perfil',
-                  aba: DrawerAba.perfil,
-                ),
-                const SizedBox(height: 16),
-                _buildSectionLabel('EMERGÊNCIA'),
-                _buildItem(
-                  context,
-                  icon: Icons.emergency_rounded,
-                  label: 'Emergência',
-                  aba: DrawerAba.emergencia,
-                  isEmergency: true,
-                ),
-              ],
+              children: role == UserRole.cidadao
+                  ? _buildCidadaoItems(context)
+                  : role == UserRole.secretaria
+                      ? _buildSecretariaItems(context)
+                      : _buildPostoItems(context),
             ),
           ),
         ),
         _buildFooter(context),
       ]),
     );
+  }
+
+  List<Widget> _buildCidadaoItems(BuildContext context) {
+    return [
+      _buildSectionLabel('PRINCIPAL'),
+      _buildItem(
+        context,
+        icon: Icons.home_rounded,
+        label: 'Início',
+        aba: DrawerAba.inicio,
+      ),
+      const SizedBox(height: 16),
+      _buildSectionLabel('SAÚDE'),
+      _buildItem(
+        context,
+        icon: Icons.calendar_today_rounded,
+        label: 'Escala/Agendamentos',
+        aba: DrawerAba.agendamentos,
+      ),
+      _buildItem(
+        context,
+        icon: Icons.groups_rounded,
+        label: 'Fila Virtual',
+        aba: DrawerAba.fila,
+      ),
+      const SizedBox(height: 16),
+      _buildSectionLabel('COMUNICAÇÃO'),
+      _buildItem(
+        context,
+        icon: Icons.chat_bubble_outline_rounded,
+        label: 'Mensagens',
+        aba: DrawerAba.mensagens,
+        badge: 2,
+      ),
+      _buildItem(
+        context,
+        icon: Icons.notifications_none_rounded,
+        label: 'Notificações',
+        aba: DrawerAba.notificacoes,
+      ),
+      const SizedBox(height: 16),
+      _buildSectionLabel('CONTA'),
+      _buildItem(
+        context,
+        icon: Icons.person_outline_rounded,
+        label: 'Meu Perfil',
+        aba: DrawerAba.perfil,
+      ),
+      const SizedBox(height: 16),
+      _buildSectionLabel('EMERGÊNCIA'),
+      _buildItem(
+        context,
+        icon: Icons.emergency_rounded,
+        label: 'Emergência',
+        aba: DrawerAba.emergencia,
+        isEmergency: true,
+      ),
+    ];
+  }
+
+  List<Widget> _buildSecretariaItems(BuildContext context) {
+    return [
+      _buildSectionLabel('ADMINISTRAÇÃO'),
+      _buildItem(
+        context,
+        icon: Icons.dashboard_rounded,
+        label: 'Dashboard',
+        aba: DrawerAba.inicio,
+      ),
+      _buildItem(
+        context,
+        icon: Icons.manage_accounts_rounded,
+        label: 'Gestão de Usuários',
+        aba: DrawerAba.usuarios,
+      ),
+      const SizedBox(height: 16),
+      _buildSectionLabel('GERENCIAMENTO'),
+      _buildItem(
+        context,
+        icon: Icons.medical_services_rounded,
+        label: 'Médicos',
+        aba: DrawerAba.medicos,
+      ),
+      _buildItem(
+        context,
+        icon: Icons.calendar_month_rounded,
+        label: 'Escalas',
+        aba: DrawerAba.escalas,
+      ),
+      const SizedBox(height: 16),
+      _buildSectionLabel('SISTEMA'),
+      _buildItem(
+        context,
+        icon: Icons.analytics_rounded,
+        label: 'Relatórios',
+        aba: DrawerAba.relatorios,
+      ),
+      _buildItem(
+        context,
+        icon: Icons.history_rounded,
+        label: 'Logs de Atividade',
+        aba: DrawerAba.logs,
+      ),
+      _buildItem(
+        context,
+        icon: Icons.settings_rounded,
+        label: 'Configurações',
+        aba: DrawerAba.configuracoes,
+      ),
+    ];
+  }
+
+  List<Widget> _buildPostoItems(BuildContext context) {
+    return [
+      _buildSectionLabel('ATENDIMENTO'),
+      _buildItem(
+        context,
+        icon: Icons.home_rounded,
+        label: 'Início',
+        aba: DrawerAba.inicio,
+      ),
+      _buildItem(
+        context,
+        icon: Icons.record_voice_over_rounded,
+        label: 'Chamar Paciente',
+        aba: DrawerAba.chamar,
+      ),
+      _buildItem(
+        context,
+        icon: Icons.person_off_rounded,
+        label: 'Registrar Ausência',
+        aba: DrawerAba.ausencia,
+      ),
+      _buildItem(
+        context,
+        icon: Icons.groups_rounded,
+        label: 'Fila do Posto',
+        aba: DrawerAba.fila,
+      ),
+    ];
   }
 
   Widget _buildHeader(BuildContext context) {

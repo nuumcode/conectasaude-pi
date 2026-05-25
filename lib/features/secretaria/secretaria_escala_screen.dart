@@ -7,6 +7,16 @@ import '../../core/theme/app_theme.dart';
 //  Permite visualizar e editar escalas de todas as UBS
 //  TODO: conectar Firestore collection 'escalas'
 // ─────────────────────────────────────────────────────────────
+import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
+import '../widgets/app_header.dart';
+import '../widgets/app_drawer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../../core/animations/app_animations.dart';
+import '../auth/login_admin_screen.dart';
+import 'secretaria_dashboard_screen.dart';
+
 class SecretariaEscalaScreen extends StatefulWidget {
   const SecretariaEscalaScreen({super.key});
   @override
@@ -15,9 +25,13 @@ class SecretariaEscalaScreen extends StatefulWidget {
 
 class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
     with SingleTickerProviderStateMixin {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   late final TabController _tabCtrl = TabController(length: 2, vsync: this);
   String _unidadeSelecionada = 'Todas';
   int _semanaSelecionada = 0;
+  
+  User? get _user => FirebaseAuth.instance.currentUser;
+
   final _unidades = [
     'Todas',
     'UBS Vila Esperança',
@@ -25,6 +39,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
     'UBS Parque Piauí',
     'UBS Dirceu Arcoverde'
   ];
+
   // Mock data
   final _escalas = <_EscalaItem>[
     _EscalaItem('Dr. Carlos Mendes', 'Clínica Geral', 'UBS Vila Esperança',
@@ -44,6 +59,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
     _EscalaItem('Dra. Carla Ribeiro', 'Ginecologia', 'UBS Dirceu Arcoverde',
         [true, true, false, true, true, false, false], '07:00', '13:00'),
   ];
+
   List<_EscalaItem> get _escalasFiltradas {
     if (_unidadeSelecionada == 'Todas') return _escalas;
     return _escalas.where((e) => e.unidade == _unidadeSelecionada).toList();
@@ -55,55 +71,136 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
     super.dispose();
   }
 
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      AppFadeRoute(page: const LoginAdminScreen()),
+    );
+  }
+
+  void _onAbaChanged(dynamic aba) {
+    if (aba == DrawerAba.escalas) return;
+    Widget? destino;
+    if (aba == DrawerAba.inicio) destino = const SecretariaDashboardScreen();
+    
+    if (destino != null) {
+      Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Em breve.'),
+        duration: Duration(seconds: 1),
+      ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenW = MediaQuery.of(context).size.width;
+    final isDesktop = screenW >= 700;
+
     return Scaffold(
-      backgroundColor: AppColors.navyDeep,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Gestão de Escalas',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            )),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        bottom: TabBar(
-          controller: _tabCtrl,
-          indicatorColor: AppColors.blueLt,
-          labelColor: AppColors.blueLt,
-          unselectedLabelColor: Colors.white38,
-          labelStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-          tabs: const [
-            Tab(text: 'Visão Semanal'),
-            Tab(text: 'Cobertura'),
-          ],
-        ),
-      ),
-      body: SafeArea(
-        child: TabBarView(
-          controller: _tabCtrl,
-          children: [
-            _buildVisaoSemanal(),
-            _buildCobertura(),
-          ],
-        ),
-      ),
+      key: _scaffoldKey,
+      backgroundColor: AppColors.bgBase,
+      drawer: isDesktop
+          ? null
+          : AppDrawer(
+              userName: _user?.displayName ?? 'Administrador',
+              userEmail: _user?.email ?? '',
+              userPhoto: _user?.photoURL,
+              abaAtual: DrawerAba.escalas,
+              onAbaChanged: _onAbaChanged,
+              onLogout: _logout,
+              role: UserRole.secretaria,
+            ),
+      body: isDesktop ? _buildDesktop() : _buildMobile(),
       floatingActionButton: FloatingActionButton(
         onPressed: _adicionarEscala,
-        backgroundColor: AppColors.blue,
+        backgroundColor: AppColors.primaryDeep,
         child: const Icon(Icons.add, color: Colors.white),
       ),
+    );
+  }
+
+  Widget _buildDesktop() {
+    return Row(children: [
+      SizedBox(
+        width: 260,
+        child: AppDrawer(
+          userName: _user?.displayName ?? 'Administrador',
+          userEmail: _user?.email ?? '',
+          userPhoto: _user?.photoURL,
+          abaAtual: DrawerAba.escalas,
+          onAbaChanged: _onAbaChanged,
+          onLogout: _logout,
+          isFixed: true,
+          role: UserRole.secretaria,
+        ),
+      ),
+      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Expanded(
+        child: Column(children: [
+          AppHeader(
+            userName: _user?.displayName?.split(' ').first ?? 'Admin',
+            userPhoto: _user?.photoURL,
+            title: 'Gestão de Escalas',
+            onLogout: _logout,
+            onMenuPressed: null,
+            onProfilePressed: () {},
+          ),
+          _buildTabs(),
+          Expanded(child: _buildTabContent()),
+        ]),
+      ),
+    ]);
+  }
+
+  Widget _buildMobile() {
+    return Column(children: [
+      AppHeader(
+        userName: _user?.displayName?.split(' ').first ?? 'Admin',
+        userPhoto: _user?.photoURL,
+        title: 'Gestão de Escalas',
+        onLogout: _logout,
+        onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        onProfilePressed: () {},
+      ),
+      _buildTabs(),
+      Expanded(child: _buildTabContent()),
+    ]);
+  }
+
+  Widget _buildTabs() {
+    return Container(
+      color: AppColors.bgMid,
+      child: TabBar(
+        controller: _tabCtrl,
+        indicatorColor: AppColors.blueLt,
+        labelColor: AppColors.blueLt,
+        unselectedLabelColor: Colors.white38,
+        labelStyle: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+        tabs: const [
+          Tab(text: 'Visão Semanal'),
+          Tab(text: 'Cobertura'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabContent() {
+    return TabBarView(
+      controller: _tabCtrl,
+      children: [
+        _buildVisaoSemanal(),
+        _buildCobertura(),
+      ],
     );
   }
 

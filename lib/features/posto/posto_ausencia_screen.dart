@@ -7,6 +7,18 @@ import '../../core/theme/app_theme.dart';
 //  Permite registrar ausência e reconvocar pacientes
 //  TODO: conectar Firestore collection 'ausencias'
 // ─────────────────────────────────────────────────────────────
+import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
+import '../widgets/app_header.dart';
+import '../widgets/app_drawer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../../core/animations/app_animations.dart';
+import '../auth/login_admin_screen.dart';
+import 'posto_dashboard_screen.dart';
+import 'posto_fila_screen.dart';
+import 'posto_chamar_screen.dart';
+
 class PostoAusenciaScreen extends StatefulWidget {
   const PostoAusenciaScreen({super.key});
   @override
@@ -14,6 +26,38 @@ class PostoAusenciaScreen extends StatefulWidget {
 }
 
 class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  
+  User? get _user => FirebaseAuth.instance.currentUser;
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      AppFadeRoute(page: const LoginAdminScreen()),
+    );
+  }
+
+  void _onAbaChanged(dynamic aba) {
+    if (aba == DrawerAba.ausencia) return;
+    Widget? destino;
+    if (aba == DrawerAba.inicio) destino = const PostoDashboardScreen();
+    if (aba == DrawerAba.chamar) destino = const PostoChamarScreen();
+    if (aba == DrawerAba.fila) destino = const PostoFilaScreen();
+
+    if (destino != null) {
+      Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Em breve.'),
+        duration: Duration(seconds: 1),
+      ));
+    }
+  }
+
   final List<_Ausencia> _ausencias = [
     _Ausencia('Raimundo Nonato', 'A-10', 'Clínica Geral', '09:02', '09:20', 1),
     _Ausencia('Tereza Cristina', 'B-03', 'Pediatria', '08:15', '08:45', 2),
@@ -21,51 +65,96 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
     _Ausencia('Sandra Mota', 'B-07', 'Ginecologia', '08:30', '09:10', 1),
     _Ausencia('Marcos Vinicius', 'A-12', 'Clínica Geral', '09:10', '09:35', 1),
   ];
+
   @override
   Widget build(BuildContext context) {
+    final screenW = MediaQuery.of(context).size.width;
+    final isDesktop = screenW >= 700;
+    
     final hoje = _ausencias.where((a) => a.chamadas < 3).toList();
     final perdidas = _ausencias.where((a) => a.chamadas >= 3).toList();
+
     return Scaffold(
-      backgroundColor: AppColors.navyDeep,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Gestão de Ausências',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            )),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+      key: _scaffoldKey,
+      backgroundColor: AppColors.bgBase,
+      drawer: isDesktop
+          ? null
+          : AppDrawer(
+              userName: _user?.displayName ?? 'Gestor de Posto',
+              userEmail: _user?.email ?? '',
+              userPhoto: _user?.photoURL,
+              abaAtual: DrawerAba.ausencia,
+              onAbaChanged: _onAbaChanged,
+              onLogout: _logout,
+              role: UserRole.posto,
+            ),
+      body: isDesktop ? _buildDesktop(hoje, perdidas) : _buildMobile(hoje, perdidas),
+    );
+  }
+
+  Widget _buildDesktop(List<_Ausencia> hoje, List<_Ausencia> perdidas) {
+    return Row(children: [
+      SizedBox(
+        width: 260,
+        child: AppDrawer(
+          userName: _user?.displayName ?? 'Gestor de Posto',
+          userEmail: _user?.email ?? '',
+          userPhoto: _user?.photoURL,
+          abaAtual: DrawerAba.ausencia,
+          onAbaChanged: _onAbaChanged,
+          onLogout: _logout,
+          isFixed: true,
+          role: UserRole.posto,
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Resumo
-              _buildResumo(),
-              const SizedBox(height: 20),
-              // Ausências reconvocáveis
-              _sectionTitle('Pacientes ausentes (reconvocáveis)', hoje.length),
-              const SizedBox(height: 10),
-              ...hoje.map((a) => _buildAusenciaCard(a, reconvocavel: true)),
-              const SizedBox(height: 24),
-              // Perderam a vez
-              _sectionTitle('Perderam a vez (3 chamadas)', perdidas.length),
-              const SizedBox(height: 10),
-              ...perdidas
-                  .map((a) => _buildAusenciaCard(a, reconvocavel: false)),
-              const SizedBox(height: 32),
-            ],
+      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Expanded(
+        child: Column(children: [
+          AppHeader(
+            userName: _user?.displayName?.split(' ').first ?? 'Gestor',
+            userPhoto: _user?.photoURL,
+            title: 'Gestão de Ausências',
+            onLogout: _logout,
+            onMenuPressed: null,
+            onProfilePressed: () {},
           ),
-        ),
+          Expanded(child: _buildScrollableContent(hoje, perdidas)),
+        ]),
+      ),
+    ]);
+  }
+
+  Widget _buildMobile(List<_Ausencia> hoje, List<_Ausencia> perdidas) {
+    return Column(children: [
+      AppHeader(
+        userName: _user?.displayName?.split(' ').first ?? 'Gestor',
+        userPhoto: _user?.photoURL,
+        title: 'Gestão de Ausências',
+        onLogout: _logout,
+        onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        onProfilePressed: () {},
+      ),
+      Expanded(child: _buildScrollableContent(hoje, perdidas)),
+    ]);
+  }
+
+  Widget _buildScrollableContent(List<_Ausencia> hoje, List<_Ausencia> perdidas) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildResumo(),
+          const SizedBox(height: 24),
+          _sectionTitle('Pacientes ausentes (reconvocáveis)', hoje.length),
+          const SizedBox(height: 12),
+          ...hoje.map((a) => _buildAusenciaCard(a, reconvocavel: true)),
+          const SizedBox(height: 28),
+          _sectionTitle('Perderam a vez (3 chamadas)', perdidas.length),
+          const SizedBox(height: 12),
+          ...perdidas.map((a) => _buildAusenciaCard(a, reconvocavel: false)),
+          const SizedBox(height: 100),
+        ],
       ),
     );
   }

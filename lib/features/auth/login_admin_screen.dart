@@ -108,17 +108,19 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
     );
   }
 
-  // ── Verificação de perfil admin no Firestore ───────────────────
-  Future<bool> _verificarAdmin(String uid) async {
+  // ── Verificação de perfil admin/posto no Firestore ────────────────
+  Future<String?> _obterPerfil(String uid) async {
     try {
       final doc = await FirebaseFirestore.instance
           .collection('usuarios')
           .doc(uid)
           .get();
-      // Verifica se o documento existe e se o campo 'perfil' é 'admin'
-      return doc.exists && doc.data()?['perfil'] == 'admin';
+      if (!doc.exists) return null;
+      final perfil = doc.data()?['perfil'] as String?;
+      if (perfil == 'admin' || perfil == 'posto') return perfil;
+      return null;
     } catch (_) {
-      return false;
+      return null;
     }
   }
 
@@ -153,15 +155,15 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
         password: _senhaCtrl.text,
       );
 
-      // 3. Verifica perfil admin no Firestore
-      final isAdmin = await _verificarAdmin(cred.user!.uid);
+      // 3. Verifica perfil no Firestore
+      final perfil = await _obterPerfil(cred.user!.uid);
 
-      if (!isAdmin) {
-        // Loga mas não tem perfil admin — desloga e nega acesso
+      if (perfil == null) {
+        // Loga mas não tem perfil autorizado — desloga e nega acesso
         await FirebaseAuth.instance.signOut();
         setState(() {
           _erro =
-              'Acesso negado. Este usuário não tem permissão de administrador.';
+              'Acesso negado. Este usuário não tem permissão administrativa.';
           _loading = false;
         });
         return;
@@ -179,8 +181,14 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
         // Não bloqueia o acesso por erro no registro de log
       }
 
-      // 5. Redireciona para o painel admin
-      if (mounted) Navigator.of(context).pushReplacementNamed('/admin/home');
+      // 5. Redireciona para o painel correspondente
+      if (mounted) {
+        if (perfil == 'admin') {
+          Navigator.of(context).pushReplacementNamed('/admin/home');
+        } else if (perfil == 'posto') {
+          Navigator.of(context).pushReplacementNamed('/posto/home');
+        }
+      }
     } on FirebaseAuthException catch (e) {
       setState(() => _erro = _traduzirErro(e.code));
     } catch (_) {

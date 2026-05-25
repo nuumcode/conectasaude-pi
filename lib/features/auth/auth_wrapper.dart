@@ -25,6 +25,7 @@ import '../../core/animations/app_animations.dart';
 
 import '../cidadao/dashboard_cidadao.dart';
 import '../secretaria/secretaria_dashboard_screen.dart';
+import '../posto/posto_dashboard_screen.dart';
 import 'login_cidadao_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
@@ -149,7 +150,13 @@ class _AuthWrapperState extends State<AuthWrapper>
       if (!mounted) return;
 
       final perfil = doc.data()?['perfil'] as String?;
-      _destino = (perfil == 'admin') ? '/admin/home' : '/home';
+      if (perfil == 'admin') {
+        _destino = '/admin/home';
+      } else if (perfil == 'posto') {
+        _destino = '/posto/home';
+      } else {
+        _destino = '/home';
+      }
     } catch (_) {
       // Erro de rede etc — vai para login como fallback seguro
       _destino = '/login';
@@ -195,6 +202,9 @@ class _AuthWrapperState extends State<AuthWrapper>
         break;
       case '/admin/home':
         page = const SecretariaDashboardScreen();
+        break;
+      case '/posto/home':
+        page = const PostoDashboardScreen();
         break;
       case '/login':
       default:

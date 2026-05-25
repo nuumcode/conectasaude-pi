@@ -11,6 +11,7 @@ import '../../core/animations/app_animations.dart';
 class AppHeader extends StatelessWidget {
   final String userName;
   final String? userPhoto;
+  final String? title;
   final VoidCallback onLogout;
   final VoidCallback? onMenuPressed;
   final VoidCallback? onProfilePressed;
@@ -19,6 +20,7 @@ class AppHeader extends StatelessWidget {
     super.key,
     required this.userName,
     this.userPhoto,
+    this.title,
     required this.onLogout,
     this.onMenuPressed,
     this.onProfilePressed,
@@ -29,7 +31,7 @@ class AppHeader extends StatelessWidget {
     final isDesktop = MediaQuery.of(context).size.width >= 700;
 
     return Container(
-      width: double.infinity, // Garante que o container ocupe toda a largura disponível
+      width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.bgMid, AppColors.bgBase],
@@ -54,17 +56,27 @@ class AppHeader extends StatelessWidget {
                 const SizedBox(width: 12),
               ],
 
-              // Logo aparece APENAS se NÃO for Desktop (Mobile/Tablet)
-              if (!isDesktop) _buildLogo(),
+              // Título ou Logo
+              if (title != null)
+                Text(
+                  title!,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                )
+              else if (!isDesktop)
+                _buildLogo(),
 
-              // Spacer: Empurra absolutamente TUDO o que vem depois para a extrema direita
+              // Spacer
               const Spacer(),
 
-              // BLOCO DA DIREITA: Agrupa a Saudação, Notificação e Avatar para ficarem sempre juntos
+              // BLOCO DA DIREITA
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Envolvemos a Saudação e o Avatar com InkWell para navegar ao perfil
                   InkWell(
                     onTap: onProfilePressed,
                     borderRadius: BorderRadius.circular(12),
@@ -73,7 +85,6 @@ class AppHeader extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Saudação ("Olá, ...")
                           Flexible(
                             child: ConstrainedBox(
                               constraints: BoxConstraints(maxWidth: isDesktop ? 220 : 110),
@@ -91,7 +102,6 @@ class AppHeader extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // Avatar
                           _buildAvatar(),
                         ],
                       ),
@@ -100,7 +110,6 @@ class AppHeader extends StatelessWidget {
 
                   const SizedBox(width: 12),
 
-                  // Notificações
                   _IconBtn(
                       icon: Icons.notifications_none_rounded,
                       onTap: () {},

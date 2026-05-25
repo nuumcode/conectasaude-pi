@@ -1,6 +1,13 @@
+import 'package:conecta_saude_pi/features/secretaria/secretaria_escala_screen.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../core/theme/app_theme.dart';
+import '../widgets/app_header.dart';
+import '../widgets/app_drawer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../../core/animations/app_animations.dart';
+import '../auth/login_admin_screen.dart';
 
 class SecretariaDashboardScreen extends StatefulWidget {
   const SecretariaDashboardScreen({super.key});
@@ -11,11 +18,8 @@ class SecretariaDashboardScreen extends StatefulWidget {
 
 class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
     with SingleTickerProviderStateMixin {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   int _navIndex = 0;
-  static const _navyDark = Color(0xFF0A1628);
-  static const _navyMid = Color(0xFF122042);
-  static const _navyGradStart = Color(0xFF0D1B3E);
-  static const _navyGradEnd = Color(0xFF081428);
   static const _bgMain = Color(0xFFF2F6FC);
   static const _textDark = Color(0xFF1A2138);
   static const _textMuted = Color(0xFF7B8794);
@@ -26,6 +30,9 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
   static const _blueAccent = Color(0xFF2563EB);
   static const _greenAccent = Color(0xFF10B981);
   late AnimationController _animController;
+
+  User? get _user => FirebaseAuth.instance.currentUser;
+
   @override
   void initState() {
     super.initState();
@@ -41,130 +48,125 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
     super.dispose();
   }
 
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      AppFadeRoute(page: const LoginAdminScreen()),
+    );
+  }
+
+  void _onAbaChanged(dynamic aba) {
+    if (aba == DrawerAba.inicio) return;
+    Widget? destino;
+    if (aba == DrawerAba.escalas) destino = const SecretariaEscalaScreen();
+
+    if (destino != null) {
+      Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Em breve.'),
+        duration: Duration(seconds: 1),
+      ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final screenW = mq.size.width;
     final isSmall = screenW < 360;
+    final isDesktop = screenW >= 700;
+
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: _bgMain,
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(isSmall, mq.padding.top),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: isSmall ? 16 : 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: isSmall ? 20 : 24),
-                    _buildStatGrid(isSmall),
-                    SizedBox(height: isSmall ? 24 : 28),
-                    _buildPlatformUsage(isSmall),
-                    SizedBox(height: isSmall ? 24 : 28),
-                    _buildAdminControls(isSmall),
-                    SizedBox(height: isSmall ? 24 : 28),
-                    _buildRecentActivity(isSmall),
-                    const SizedBox(height: 100),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: _buildBottomNav(isSmall),
+      drawer: isDesktop
+          ? null
+          : AppDrawer(
+              userName: _user?.displayName ?? 'Administrador',
+              userEmail: _user?.email ?? '',
+              userPhoto: _user?.photoURL,
+              abaAtual: DrawerAba.inicio,
+              onAbaChanged: _onAbaChanged,
+              onLogout: _logout,
+              role: UserRole.secretaria,
+            ),
+      body: isDesktop ? _buildDesktop(isSmall) : _buildMobile(isSmall),
+      bottomNavigationBar: isDesktop ? null : _buildBottomNav(isSmall),
     );
   }
 
-  Widget _buildHeader(bool isSmall, double topPadding) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [_navyMid, _navyDark],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+  Widget _buildDesktop(bool isSmall) {
+    return Row(children: [
+      SizedBox(
+        width: 260,
+        child: AppDrawer(
+          userName: _user?.displayName ?? 'Administrador',
+          userEmail: _user?.email ?? '',
+          userPhoto: _user?.photoURL,
+          abaAtual: DrawerAba.inicio,
+          onAbaChanged: _onAbaChanged,
+          onLogout: _logout,
+          isFixed: true,
+          role: UserRole.secretaria,
         ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 20,
-            offset: Offset(0, 8),
-          ),
-        ],
       ),
+      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Expanded(
+        child: Column(children: [
+          AppHeader(
+            userName: _user?.displayName?.split(' ').first ?? 'Admin',
+            userPhoto: _user?.photoURL,
+            title: 'Painel Admin',
+            onLogout: _logout,
+            onMenuPressed: null,
+            onProfilePressed: () {},
+          ),
+          Expanded(child: _buildScrollableContent(isSmall)),
+        ]),
+      ),
+    ]);
+  }
+
+  Widget _buildMobile(bool isSmall) {
+    return Column(children: [
+      AppHeader(
+        userName: _user?.displayName?.split(' ').first ?? 'Admin',
+        userPhoto: _user?.photoURL,
+        title: 'Painel Admin',
+        onLogout: _logout,
+        onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        onProfilePressed: () {},
+      ),
+      Expanded(child: _buildScrollableContent(isSmall)),
+    ]);
+  }
+
+  Widget _buildScrollableContent(bool isSmall) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: topPadding + 8),
-          _buildAppBar(isSmall),
-          const SizedBox(height: 20),
           _buildWelcomeBanner(isSmall),
-          SizedBox(height: isSmall ? 20 : 24),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppBar(bool isSmall) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: isSmall ? 16 : 20),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child:
-                const Icon(Icons.menu_rounded, size: 20, color: Colors.white),
-          ),
-          const Spacer(),
-          Text('Painel Admin',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: isSmall ? 17 : 19,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: 0.3,
-              )),
-          const Spacer(),
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Stack(
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: isSmall ? 16 : 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Center(
-                  child: Icon(Icons.notifications_outlined,
-                      size: 20, color: Colors.white),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 9,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF4757),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: _navyDark, width: 1.5),
-                    ),
-                  ),
-                ),
+                SizedBox(height: isSmall ? 20 : 24),
+                _buildStatGrid(isSmall),
+                SizedBox(height: isSmall ? 24 : 28),
+                _buildPlatformUsage(isSmall),
+                SizedBox(height: isSmall ? 24 : 28),
+                _buildAdminControls(isSmall),
+                SizedBox(height: isSmall ? 24 : 28),
+                _buildRecentActivity(isSmall),
+                const SizedBox(height: 100),
               ],
             ),
           ),
@@ -174,8 +176,21 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
   }
 
   Widget _buildWelcomeBanner(bool isSmall) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: isSmall ? 16 : 20),
+    return Container(
+      width: double.infinity,
+      padding:
+          EdgeInsets.fromLTRB(isSmall ? 16 : 20, 20, isSmall ? 16 : 20, 24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.bgMid, AppColors.bgBase],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
       child: Row(
         children: [
           Container(
@@ -271,7 +286,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
                   ],
                 ),
                 SizedBox(height: isSmall ? 4 : 6),
-                Text('Bem-vindo, Administrador',
+                Text('Bem-vindo, ${_user?.displayName ?? 'Administrador'}',
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: isSmall ? 17 : 19,
@@ -480,9 +495,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
                 border: Border.all(color: _dividerColor),
                 boxShadow: const [
                   BoxShadow(
-                      color: _cardShadow,
-                      blurRadius: 4,
-                      offset: Offset(0, 1)),
+                      color: _cardShadow, blurRadius: 4, offset: Offset(0, 1)),
                 ],
               ),
               child: Row(
@@ -526,8 +539,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(
-              color: _cardShadow, blurRadius: 10, offset: Offset(0, 3)),
+          BoxShadow(color: _cardShadow, blurRadius: 10, offset: Offset(0, 3)),
         ],
       ),
       child: Column(
@@ -589,8 +601,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(
-              color: _cardShadow, blurRadius: 10, offset: Offset(0, 3)),
+          BoxShadow(color: _cardShadow, blurRadius: 10, offset: Offset(0, 3)),
         ],
       ),
       child: Column(
@@ -723,8 +734,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _dividerColor.withOpacity(0.7)),
           boxShadow: const [
-            BoxShadow(
-                color: _cardShadow, blurRadius: 8, offset: Offset(0, 3)),
+            BoxShadow(color: _cardShadow, blurRadius: 8, offset: Offset(0, 3)),
           ],
         ),
         child: Column(
@@ -817,9 +827,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
             borderRadius: BorderRadius.circular(16),
             boxShadow: const [
               BoxShadow(
-                  color: _cardShadow,
-                  blurRadius: 10,
-                  offset: Offset(0, 3)),
+                  color: _cardShadow, blurRadius: 10, offset: Offset(0, 3)),
             ],
           ),
           child: Column(

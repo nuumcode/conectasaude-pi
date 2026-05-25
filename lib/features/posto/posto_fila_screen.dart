@@ -9,9 +9,11 @@
 //   ../../core/theme/app_theme.dart
 //   ../../services/fila_service.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import '../../core/theme/app_theme.dart';
 import '/services/fila_service.dart';
 
 class PostoFilaScreen extends StatefulWidget {
@@ -104,10 +106,20 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
     final dateStr =
         DateFormat("EEEE, d 'de' MMMM 'de' yyyy", 'pt_BR').format(now);
     final timeStr = DateFormat('HH:mm').format(now);
+    // Prioriza displayName, cai em email quando faltar, e só usa
+    // o placeholder genérico se não houver usuário autenticado.
     final user = FirebaseAuth.instance.currentUser;
-    final nome = (user?.displayName?.isNotEmpty == true)
-        ? user!.displayName!
-        : 'Dr. João Silva';
+    String nome;
+    if (user == null) {
+      nome = 'Atendente';
+    } else if (user.displayName != null &&
+        user.displayName!.trim().isNotEmpty) {
+      nome = user.displayName!.trim();
+    } else if (user.email != null && user.email!.isNotEmpty) {
+      nome = user.email!.split('@').first;
+    } else {
+      nome = 'Atendente';
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
       decoration: const BoxDecoration(
@@ -367,7 +379,7 @@ class _PostoFilaScreenState extends State<PostoFilaScreen> {
           children: [
             _timeChip(Icons.schedule, pac.horaFormatada, 'Chegada'),
             const SizedBox(width: 12),
-            _timeChip(Icons.campaign_outlined, pac.chamadaFormatada, 'Chamada'),
+            _timeChip(Icons.campaign_outlined, pac.senhaComNome, 'Chamada'),
           ],
         ),
       ],

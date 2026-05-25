@@ -14,6 +14,7 @@
 //    3. Logado + perfil=cidadão  → /home
 // ═══════════════════════════════════════════════════════════════════
 
+import 'package:conecta_saude_pi/features/posto/posto_dashboard_screen.dart';
 import 'package:conecta_saude_pi/features/secretaria/secretaria_dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -54,6 +55,7 @@ class ConectaSaudeApp extends StatelessWidget {
         '/home': (_) => const HomeCidadaoScreen(),
         '/admin': (_) => const LoginAdminScreen(),
         '/admin/home': (_) => const SecretariaDashboardScreen(),
+        '/posto/home': (_) => const PostoDashboardScreen(),
         '/perfil': (_) => const PerfilScreen(),
         '/setup-admin': (_) => const AdminSetupPage(),
       },

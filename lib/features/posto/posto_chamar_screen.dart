@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+import '../widgets/app_header.dart';
+import '../widgets/app_drawer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../../core/animations/app_animations.dart';
+import '../auth/login_admin_screen.dart';
+import 'posto_dashboard_screen.dart';
+import 'posto_fila_screen.dart';
+import 'posto_ausencia_screen.dart';
 
-// ─────────────────────────────────────────────────────────────
-//  PostoChamarScreen — Painel do Profissional de Saúde
-//  Dashboard com resumo do dia, ações rápidas e próximas consultas
-//  TODO: conectar Firestore para dados reais
-// ─────────────────────────────────────────────────────────────
 class PostoChamarScreen extends StatefulWidget {
   const PostoChamarScreen({super.key});
   @override
@@ -13,13 +17,44 @@ class PostoChamarScreen extends StatefulWidget {
 }
 
 class _PostoChamarScreenState extends State<PostoChamarScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   int _navIndex = 0;
-  // Cores auxiliares tema claro
   static const _bgMain = Color(0xFFF0F5FC);
   static const _textDark = Color(0xFF1A2138);
   static const _textMuted = Color(0xFF7B8794);
   static const _dividerColor = Color(0xFFE8EEF5);
   static const _cardShadow = Color(0x0A000000);
+
+  User? get _user => FirebaseAuth.instance.currentUser;
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      AppFadeRoute(page: const LoginAdminScreen()),
+    );
+  }
+
+  void _onAbaChanged(dynamic aba) {
+    if (aba == DrawerAba.chamar) return;
+    Widget? destino;
+    if (aba == DrawerAba.inicio) destino = const PostoDashboardScreen();
+    if (aba == DrawerAba.ausencia) destino = const PostoAusenciaScreen();
+    if (aba == DrawerAba.fila) destino = const PostoFilaScreen();
+
+    if (destino != null) {
+      Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Em breve.'),
+        duration: Duration(seconds: 1),
+      ));
+    }
+  }
+
   // Mock data
   final _profissional = _DadosProfissional(
     nome: 'Dr. João Silva',
@@ -41,74 +76,123 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
     _Consulta('Fernanda Lima', 'Consulta presencial', '11:30',
         const Color(0xFF1A72FF)),
   ];
+
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final screenW = mq.size.width;
     final isSmall = screenW < 360;
+    final isDesktop = screenW >= 700;
+
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: _bgMain,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(isSmall),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: isSmall ? 14 : 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: isSmall ? 20 : 24),
-                    _buildResumoSection(isSmall),
-                    SizedBox(height: isSmall ? 22 : 28),
-                    _buildAcoesRapidas(isSmall),
-                    SizedBox(height: isSmall ? 22 : 28),
-                    _buildProximasConsultas(isSmall),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: _buildBottomNav(isSmall),
+      drawer: isDesktop
+          ? null
+          : AppDrawer(
+              userName: _user?.displayName ?? 'Gestor de Posto',
+              userEmail: _user?.email ?? '',
+              userPhoto: _user?.photoURL,
+              abaAtual: DrawerAba.chamar,
+              onAbaChanged: _onAbaChanged,
+              onLogout: _logout,
+              role: UserRole.posto,
+            ),
+      body: isDesktop ? _buildDesktop(isSmall) : _buildMobile(isSmall),
+      bottomNavigationBar: isDesktop ? null : _buildBottomNav(isSmall),
     );
   }
 
-  // ── Header com avatar e info do profissional ───────────────
-  Widget _buildHeader(bool isSmall) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        isSmall ? 14 : 20,
-        isSmall ? 16 : 20,
-        isSmall ? 14 : 20,
-        isSmall ? 18 : 24,
+  Widget _buildDesktop(bool isSmall) {
+    return Row(children: [
+      SizedBox(
+        width: 260,
+        child: AppDrawer(
+          userName: _user?.displayName ?? 'Gestor de Posto',
+          userEmail: _user?.email ?? '',
+          userPhoto: _user?.photoURL,
+          abaAtual: DrawerAba.chamar,
+          onAbaChanged: _onAbaChanged,
+          onLogout: _logout,
+          isFixed: true,
+          role: UserRole.posto,
+        ),
       ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.navyMid, AppColors.navyDeep],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.navyDeep.withOpacity(0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Expanded(
+        child: Column(children: [
+          AppHeader(
+            userName: _user?.displayName?.split(' ').first ?? 'Gestor',
+            userPhoto: _user?.photoURL,
+            title: 'Chamar Paciente',
+            onLogout: _logout,
+            onMenuPressed: null,
+            onProfilePressed: () {},
+          ),
+          Expanded(child: _buildScrollableContent(isSmall)),
+        ]),
+      ),
+    ]);
+  }
+
+  Widget _buildMobile(bool isSmall) {
+    return Column(children: [
+      AppHeader(
+        userName: _user?.displayName?.split(' ').first ?? 'Gestor',
+        userPhoto: _user?.photoURL,
+        title: 'Chamar Paciente',
+        onLogout: _logout,
+        onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        onProfilePressed: () {},
+      ),
+      Expanded(child: _buildScrollableContent(isSmall)),
+    ]);
+  }
+
+  Widget _buildScrollableContent(bool isSmall) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildWelcomeBanner(isSmall),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: isSmall ? 14 : 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: isSmall ? 20 : 24),
+                _buildResumoSection(isSmall),
+                SizedBox(height: isSmall ? 22 : 28),
+                _buildAcoesRapidas(isSmall),
+                SizedBox(height: isSmall ? 22 : 28),
+                _buildProximasConsultas(isSmall),
+                const SizedBox(height: 100),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildWelcomeBanner(bool isSmall) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(isSmall ? 14 : 20, 20, isSmall ? 14 : 20, 24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.bgMid, AppColors.bgBase],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
       child: Row(
         children: [
-          // Avatar
           Container(
             width: isSmall ? 52 : 60,
             height: isSmall ? 52 : 60,
@@ -132,7 +216,6 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
             ),
           ),
           SizedBox(width: isSmall ? 12 : 16),
-          // Nome + especialidade
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,17 +248,6 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 ),
               ],
             ),
-          ),
-          // Notificação
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.notifications_outlined,
-                color: Colors.white70, size: 22),
           ),
         ],
       ),
