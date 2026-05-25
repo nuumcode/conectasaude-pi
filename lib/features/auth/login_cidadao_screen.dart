@@ -433,10 +433,12 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen>
                                 textCapitalization: TextCapitalization.words,
                                 keyboardType: TextInputType.name,
                                 validator: (v) {
-                                  if (v == null || v.trim().isEmpty)
+                                  if (v == null || v.trim().isEmpty) {
                                     return 'Informe seu nome completo';
-                                  if (v.trim().split(' ').length < 2)
+                                  }
+                                  if (v.trim().split(' ').length < 2) {
                                     return 'Digite nome e sobrenome';
+                                  }
                                   return null;
                                 },
                               )),
@@ -501,11 +503,13 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen>
                                 FilteringTextInputFormatter.deny(RegExp(r'\s')),
                               ],
                               validator: (v) {
-                                if (v == null || v.trim().isEmpty)
+                                if (v == null || v.trim().isEmpty) {
                                   return 'Informe seu e-mail';
+                                }
                                 if (!RegExp(r'^[\w\.\+\-]+@[\w\-]+\.\w{2,}$')
-                                    .hasMatch(v.trim()))
+                                    .hasMatch(v.trim())) {
                                   return 'E-mail inválido';
+                                }
                                 return null;
                               },
                             )),
@@ -527,8 +531,9 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen>
                                     setState(() => _senhaVis = !_senhaVis),
                               ),
                               validator: (v) {
-                                if (v == null || v.isEmpty)
+                                if (v == null || v.isEmpty) {
                                   return 'Informe sua senha';
+                                }
                                 if (v.length < 6) return 'Mínimo 6 caracteres';
                                 return null;
                               },
@@ -550,10 +555,12 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen>
                                       () => _confirmaVis = !_confirmaVis),
                                 ),
                                 validator: (v) {
-                                  if (v == null || v.isEmpty)
+                                  if (v == null || v.isEmpty) {
                                     return 'Confirme sua senha';
-                                  if (v != _senhaCtrl.text)
+                                  }
+                                  if (v != _senhaCtrl.text) {
                                     return 'As senhas não coincidem';
+                                  }
                                   return null;
                                 },
                               )),
@@ -638,11 +645,11 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen>
                 ),
                 boxShadow: [
                   BoxShadow(
-                      color: AppColors.blue.withOpacity(0.40),
+                      color: AppColors.blue.withValues(alpha: 0.40),
                       blurRadius: 18,
                       offset: const Offset(0, 6)),
                   BoxShadow(
-                      color: AppColors.greenLt.withOpacity(0.10),
+                      color: AppColors.greenLt.withValues(alpha: 0.10),
                       blurRadius: 28,
                       spreadRadius: 2),
                 ],
@@ -789,7 +796,8 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen>
         border: Border.all(color: AppColors.error.withOpacity(0.35)),
       ),
       child: Row(children: [
-        Icon(Icons.error_outline_rounded, color: AppColors.error, size: 16),
+        const Icon(Icons.error_outline_rounded,
+            color: AppColors.error, size: 16),
         const SizedBox(width: 10),
         Expanded(
             child: Text(_erro!,
@@ -960,12 +968,16 @@ class _TelefoneFormatter extends TextInputFormatter {
 bool _cpfValido(String cpf) {
   if (cpf.length != 11 || RegExp(r'^(\d)\1+$').hasMatch(cpf)) return false;
   int soma = 0;
-  for (int i = 0; i < 9; i++) soma += int.parse(cpf[i]) * (10 - i);
+  for (int i = 0; i < 9; i++) {
+    soma += int.parse(cpf[i]) * (10 - i);
+  }
   int r1 = (soma * 10) % 11;
   if (r1 == 10 || r1 == 11) r1 = 0;
   if (r1 != int.parse(cpf[9])) return false;
   soma = 0;
-  for (int i = 0; i < 10; i++) soma += int.parse(cpf[i]) * (11 - i);
+  for (int i = 0; i < 10; i++) {
+    soma += int.parse(cpf[i]) * (11 - i);
+  }
   int r2 = (soma * 10) % 11;
   if (r2 == 10 || r2 == 11) r2 = 0;
   return r2 == int.parse(cpf[10]);

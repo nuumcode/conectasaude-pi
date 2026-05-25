@@ -6,6 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:conecta_saude_pi/features/auth/login_cidadao_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/dashboard_cidadao.dart';
 import 'package:conecta_saude_pi/features/cidadao/cidadao_escala_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/perfil_screen.dart';
 import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
 import 'package:conecta_saude_pi/features/widgets/app_header.dart';
 import '../../core/theme/app_theme.dart';
@@ -85,6 +86,8 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
         return const CidadaoEscalaScreen();
       case DrawerAba.fila:
         return const CidadaoFilaScreen();
+      case DrawerAba.perfil:
+        return const PerfilScreen();
       default:
         return null;
     }
@@ -135,6 +138,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
             userPhoto: _user?.photoURL,
             onLogout: _logout,
             onMenuPressed: null,
+            onProfilePressed: () => _onAbaChanged(DrawerAba.perfil),
           ),
           Expanded(child: _buildConteudo()),
         ]),
@@ -149,6 +153,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
         userPhoto: _user?.photoURL,
         onLogout: _logout,
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        onProfilePressed: () => _onAbaChanged(DrawerAba.perfil),
       ),
       Expanded(child: _buildConteudo()),
     ]);
@@ -500,7 +505,7 @@ class _CidadaoFilaScreenState extends State<CidadaoFilaScreen>
           ),
           GestureDetector(
             onTap: () => setState(() => _bannerVisivel = false),
-            child: Icon(Icons.close, size: 18, color: _textMuted),
+            child: const Icon(Icons.close, size: 18, color: _textMuted),
           ),
         ],
       ),

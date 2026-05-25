@@ -7,6 +7,7 @@
 //  ✅ Conteúdo de Escala Médica preservado dentro do layout reutilizável
 // ═══════════════════════════════════════════════════════════════════
 import 'package:conecta_saude_pi/features/cidadao/cidadao_fila_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/perfil_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -163,6 +164,8 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
         return const CidadaoEscalaScreen();
       case DrawerAba.fila:
         return const CidadaoFilaScreen();
+      case DrawerAba.perfil:
+        return const PerfilScreen();
       // Abas futuras — adicione aqui quando as telas existirem:
       // case DrawerAba.prontuarios:   return const CidadaoProntuariosScreen();
       // case DrawerAba.vacinacao:     return const CidadaoVacinacaoScreen();
@@ -219,6 +222,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
             userPhoto: _user?.photoURL,
             onLogout: _logout,
             onMenuPressed: null,
+            onProfilePressed: () => _onAbaChanged(DrawerAba.perfil),
           ),
           Expanded(child: _buildConteudo()),
         ]),
@@ -233,6 +237,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
         userPhoto: _user?.photoURL,
         onLogout: _logout,
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        onProfilePressed: () => _onAbaChanged(DrawerAba.perfil),
       ),
       Expanded(child: _buildConteudo()),
     ]);

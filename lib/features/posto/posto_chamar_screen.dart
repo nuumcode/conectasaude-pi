@@ -149,7 +149,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    Icon(Icons.medical_services_outlined,
+                    const Icon(Icons.medical_services_outlined,
                         size: 14, color: AppColors.accent),
                     const SizedBox(width: 6),
                     Text(
@@ -199,7 +199,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 )),
             Row(
               children: [
-                Icon(Icons.calendar_today_rounded, size: 14, color: _textMuted),
+                const Icon(Icons.calendar_today_rounded, size: 14, color: _textMuted),
                 const SizedBox(width: 6),
                 Text(
                   _getDataHoje(),
@@ -280,11 +280,11 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
               color: _cardShadow,
               blurRadius: 10,
-              offset: const Offset(0, 3),
+              offset: Offset(0, 3),
             ),
           ],
         ),
@@ -400,11 +400,11 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _dividerColor),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: _cardShadow,
             blurRadius: 6,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -534,7 +534,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    Icon(Icons.medical_services_outlined,
+                    const Icon(Icons.medical_services_outlined,
                         size: 12, color: _textMuted),
                     const SizedBox(width: 4),
                     Text(consulta.tipo,

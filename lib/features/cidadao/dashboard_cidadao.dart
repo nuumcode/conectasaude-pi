@@ -123,12 +123,6 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
         return const CidadaoFilaScreen();
       case DrawerAba.perfil:
         return const PerfilScreen();
-      // Abas futuras — descomente quando as telas existirem:
-      // case DrawerAba.prontuarios:  return const CidadaoProntuariosScreen();
-      // case DrawerAba.vacinacao:    return const CidadaoVacinacaoScreen();
-      // case DrawerAba.mensagens:    return const CidadaoMensagensScreen();
-      // case DrawerAba.notificacoes: return const CidadaoNotificacoesScreen();
-      // case DrawerAba.emergencia:   return const CidadaoEmergenciaScreen();
       default:
         return null;
     }
@@ -184,6 +178,7 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
             userPhoto: _user?.photoURL,
             onLogout: _logout,
             onMenuPressed: null,
+            onProfilePressed: () => _onAbaChanged(DrawerAba.perfil),
           ),
           Expanded(child: _buildConteudo()),
         ]),
@@ -200,6 +195,7 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
         userPhoto: _user?.photoURL,
         onLogout: _logout,
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        onProfilePressed: () => _onAbaChanged(DrawerAba.perfil),
       ),
       Expanded(child: _buildConteudo()),
     ]);
@@ -239,7 +235,7 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
                     'Notificações recentes',
                     trailing: TextButton(
                       onPressed: () {},
-                      child: Text('Ver todas',
+                      child: const Text('Ver todas',
                           style: TextStyle(
                               color: AppColors.primaryDeep,
                               fontFamily: 'Poppins',
@@ -277,7 +273,7 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
   Widget _buildResumoRapido() {
     final screenW = MediaQuery.of(context).size.width;
     final cards = [
-      _ResumoData(
+      const _ResumoData(
         icon: Icons.calendar_today_rounded,
         titulo: 'Próximo agendamento',
         valor: '24/05/2025',
@@ -286,7 +282,7 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
         rodapeIcon: Icons.location_on_outlined,
         cor: AppColors.bgMid,
       ),
-      _ResumoData(
+      const _ResumoData(
         icon: Icons.verified_user_outlined,
         titulo: 'Situação de vacinação',
         valor: 'Em dia',
@@ -384,7 +380,7 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
   // ── Notificações recentes ────────────────────────────────────────
   Widget _buildNotificacoes() {
     final items = [
-      _NotifData(
+      const _NotifData(
         icon: Icons.calendar_today_rounded,
         titulo: 'Consulta agendada',
         sub:
@@ -392,14 +388,14 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
         data: '10/05/2025',
         lida: false,
       ),
-      _NotifData(
+      const _NotifData(
         icon: Icons.verified_user_outlined,
         titulo: 'Vacinação atualizada',
         sub: 'Seu cartão de vacinação foi atualizado com sucesso.',
         data: '07/05/2025',
         lida: false,
       ),
-      _NotifData(
+      const _NotifData(
         icon: Icons.description_outlined,
         titulo: 'Documento pendente',
         sub: 'Você tem 2 documentos pendentes. Envie para evitar bloqueios.',
@@ -551,7 +547,7 @@ class _ResumoCard extends StatelessWidget {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(data.valor,
-                style: TextStyle(
+                style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 22,
                     fontWeight: FontWeight.w800,

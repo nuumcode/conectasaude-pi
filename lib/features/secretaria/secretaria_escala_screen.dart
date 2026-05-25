@@ -1,6 +1,7 @@
 // TODO Implement this library.
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../core/theme/app_theme.dart';
+
 // ─────────────────────────────────────────────────────────────
 //  SecretariaEscalaScreen — Gestão de escalas pela Secretaria
 //  Permite visualizar e editar escalas de todas as UBS
@@ -11,13 +12,19 @@ class SecretariaEscalaScreen extends StatefulWidget {
   @override
   State<SecretariaEscalaScreen> createState() => _SecretariaEscalaScreenState();
 }
+
 class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabCtrl = TabController(length: 2, vsync: this);
   String _unidadeSelecionada = 'Todas';
   int _semanaSelecionada = 0;
-  final _unidades = ['Todas', 'UBS Vila Esperança', 'UBS Centro',
-      'UBS Parque Piauí', 'UBS Dirceu Arcoverde'];
+  final _unidades = [
+    'Todas',
+    'UBS Vila Esperança',
+    'UBS Centro',
+    'UBS Parque Piauí',
+    'UBS Dirceu Arcoverde'
+  ];
   // Mock data
   final _escalas = <_EscalaItem>[
     _EscalaItem('Dr. Carlos Mendes', 'Clínica Geral', 'UBS Vila Esperança',
@@ -41,11 +48,13 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
     if (_unidadeSelecionada == 'Todas') return _escalas;
     return _escalas.where((e) => e.unidade == _unidadeSelecionada).toList();
   }
+
   @override
   void dispose() {
     _tabCtrl.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,6 +106,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       ),
     );
   }
+
   // ── Tab 1: Visão Semanal ───────────────────────────────────
   Widget _buildVisaoSemanal() {
     return Column(
@@ -119,6 +129,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       ],
     );
   }
+
   Widget _buildUnidadeFilter() {
     return SizedBox(
       height: 36,
@@ -132,7 +143,8 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
             child: GestureDetector(
               onTap: () => setState(() => _unidadeSelecionada = u),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
                   color: sel ? AppColors.blue : const Color(0xFF0F1B3D),
                   borderRadius: BorderRadius.circular(8),
@@ -153,6 +165,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       ),
     );
   }
+
   Widget _buildSemanaNav() {
     final hoje = DateTime.now();
     final inicioSemana = hoje.add(Duration(days: _semanaSelecionada * 7));
@@ -184,6 +197,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       ),
     );
   }
+
   Widget _buildEscalaRow(_EscalaItem item) {
     const dias = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
     return Container(
@@ -294,6 +308,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       ),
     );
   }
+
   // ── Tab 2: Cobertura ───────────────────────────────────────
   Widget _buildCobertura() {
     final coberturas = [
@@ -333,6 +348,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       ),
     );
   }
+
   Widget _buildCoberturaResumo() {
     return Container(
       width: double.infinity,
@@ -358,6 +374,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       ),
     );
   }
+
   Widget _coberturaMetrica(String valor, String label, Color cor) {
     return Expanded(
       child: Column(
@@ -379,6 +396,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       ),
     );
   }
+
   Widget _dividerVertical() {
     return Container(
       width: 1,
@@ -386,6 +404,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       color: Colors.white.withOpacity(0.08),
     );
   }
+
   Widget _buildCoberturaCard(_CoberturaData data) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -400,7 +419,8 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
         children: [
           Row(
             children: [
-              const Icon(Icons.local_hospital, size: 16, color: AppColors.blueLt),
+              const Icon(Icons.local_hospital,
+                  size: 16, color: AppColors.blueLt),
               const SizedBox(width: 8),
               Text(data.unidade,
                   style: const TextStyle(
@@ -459,6 +479,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       ),
     );
   }
+
   void _adicionarEscala() {
     showModalBottomSheet(
       context: context,
@@ -480,7 +501,8 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                   color: Colors.white,
                 )),
             const SizedBox(height: 8),
-            Text('Funcionalidade em desenvolvimento.\nConectar com Firebase para persistência.',
+            Text(
+                'Funcionalidade em desenvolvimento.\nConectar com Firebase para persistência.',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 13,
@@ -512,6 +534,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
     );
   }
 }
+
 class _EscalaItem {
   final String profissional;
   final String especialidade;
@@ -522,6 +545,7 @@ class _EscalaItem {
   _EscalaItem(this.profissional, this.especialidade, this.unidade,
       this.diasAtivos, this.horaInicio, this.horaFim);
 }
+
 class _CoberturaData {
   final String unidade;
   final Map<String, double> especialidades;

@@ -13,6 +13,7 @@ class AppHeader extends StatelessWidget {
   final String? userPhoto;
   final VoidCallback onLogout;
   final VoidCallback? onMenuPressed;
+  final VoidCallback? onProfilePressed;
 
   const AppHeader({
     super.key,
@@ -20,6 +21,7 @@ class AppHeader extends StatelessWidget {
     this.userPhoto,
     required this.onLogout,
     this.onMenuPressed,
+    this.onProfilePressed,
   });
 
   @override
@@ -62,35 +64,47 @@ class AppHeader extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Saudação ("Olá, ...")
-                  Flexible(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: isDesktop ? 220 : 110),
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: Text(
-                          'Olá, $userName!',
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: isDesktop ? 14 : 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white),
-                        ),
+                  // Envolvemos a Saudação e o Avatar com InkWell para navegar ao perfil
+                  InkWell(
+                    onTap: onProfilePressed,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Saudação ("Olá, ...")
+                          Flexible(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: isDesktop ? 220 : 110),
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 12),
+                                child: Text(
+                                  'Olá, $userName!',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: isDesktop ? 14 : 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Avatar
+                          _buildAvatar(),
+                        ],
                       ),
                     ),
                   ),
+
+                  const SizedBox(width: 12),
 
                   // Notificações
                   _IconBtn(
                       icon: Icons.notifications_none_rounded,
                       onTap: () {},
                       badge: 2),
-                  
-                  const SizedBox(width: 12),
-
-                  // Avatar
-                  _buildAvatar(),
                 ],
               ),
             ],

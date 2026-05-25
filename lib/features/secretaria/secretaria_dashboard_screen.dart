@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import '../../../core/theme/app_theme.dart';
+import '../../core/theme/app_theme.dart';
+
 class SecretariaDashboardScreen extends StatefulWidget {
   const SecretariaDashboardScreen({super.key});
   @override
   State<SecretariaDashboardScreen> createState() =>
       _SecretariaDashboardScreenState();
 }
+
 class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
     with SingleTickerProviderStateMixin {
   int _navIndex = 0;
@@ -32,11 +34,13 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       duration: const Duration(milliseconds: 1200),
     )..forward();
   }
+
   @override
   void dispose() {
     _animController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
@@ -76,6 +80,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       bottomNavigationBar: _buildBottomNav(isSmall),
     );
   }
+
   Widget _buildHeader(bool isSmall, double topPadding) {
     return Container(
       width: double.infinity,
@@ -108,6 +113,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ),
     );
   }
+
   Widget _buildAppBar(bool isSmall) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isSmall ? 16 : 20),
@@ -120,7 +126,8 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
               color: Colors.white.withOpacity(0.08),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.menu_rounded, size: 20, color: Colors.white),
+            child:
+                const Icon(Icons.menu_rounded, size: 20, color: Colors.white),
           ),
           const Spacer(),
           Text('Painel Admin',
@@ -165,6 +172,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ),
     );
   }
+
   Widget _buildWelcomeBanner(bool isSmall) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isSmall ? 16 : 20),
@@ -286,6 +294,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ),
     );
   }
+
   Widget _buildStatGrid(bool isSmall) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -347,6 +356,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       },
     );
   }
+
   Widget _buildStatCard({
     required double width,
     required IconData icon,
@@ -367,10 +377,10 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(
+            const BoxShadow(
               color: _cardShadow,
               blurRadius: 12,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
             BoxShadow(
               color: iconColor.withOpacity(0.04),
@@ -396,8 +406,8 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
                 ),
                 if (trend.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 7, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
                       color: positivo
                           ? _greenAccent.withOpacity(0.1)
@@ -409,9 +419,8 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
                           fontFamily: 'Poppins',
                           fontSize: isSmall ? 9 : 10,
                           fontWeight: FontWeight.w600,
-                          color: positivo
-                              ? _greenAccent
-                              : const Color(0xFFEF4444),
+                          color:
+                              positivo ? _greenAccent : const Color(0xFFEF4444),
                         )),
                   ),
               ],
@@ -448,6 +457,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ),
     );
   }
+
   Widget _buildPlatformUsage(bool isSmall) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -468,17 +478,17 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: _dividerColor),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                       color: _cardShadow,
                       blurRadius: 4,
-                      offset: const Offset(0, 1)),
+                      offset: Offset(0, 1)),
                 ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.calendar_today_rounded,
+                  const Icon(Icons.calendar_today_rounded,
                       size: 12, color: _blueAccent),
                   const SizedBox(width: 6),
                   Text('Últimos 7 Dias',
@@ -489,7 +499,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
                         color: _textDark,
                       )),
                   const SizedBox(width: 4),
-                  Icon(Icons.keyboard_arrow_down_rounded,
+                  const Icon(Icons.keyboard_arrow_down_rounded,
                       size: 14, color: _textMuted),
                 ],
               ),
@@ -508,15 +518,16 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ],
     );
   }
+
   Widget _buildActivityChart(bool isSmall) {
     return Container(
       padding: EdgeInsets.all(isSmall ? 14 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-              color: _cardShadow, blurRadius: 10, offset: const Offset(0, 3)),
+              color: _cardShadow, blurRadius: 10, offset: Offset(0, 3)),
         ],
       ),
       child: Column(
@@ -570,15 +581,16 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ),
     );
   }
+
   Widget _buildDonutChart(bool isSmall) {
     return Container(
       padding: EdgeInsets.all(isSmall ? 12 : 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-              color: _cardShadow, blurRadius: 10, offset: const Offset(0, 3)),
+              color: _cardShadow, blurRadius: 10, offset: Offset(0, 3)),
         ],
       ),
       child: Column(
@@ -628,6 +640,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ),
     );
   }
+
   Widget _buildLegendItem(
       String label, Color color, String value, bool isSmall) {
     return Row(
@@ -659,6 +672,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ],
     );
   }
+
   Widget _buildAdminControls(bool isSmall) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -694,6 +708,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ],
     );
   }
+
   Widget _buildControlBtn(
       double width, IconData icon, String label, Color color, bool isSmall) {
     return SizedBox(
@@ -707,9 +722,9 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _dividerColor.withOpacity(0.7)),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-                color: _cardShadow, blurRadius: 8, offset: const Offset(0, 3)),
+                color: _cardShadow, blurRadius: 8, offset: Offset(0, 3)),
           ],
         ),
         child: Column(
@@ -738,6 +753,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ),
     );
   }
+
   Widget _buildRecentActivity(bool isSmall) {
     final atividades = [
       _Atividade(
@@ -787,7 +803,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
                         color: _blueAccent,
                       )),
                   const SizedBox(width: 2),
-                  Icon(Icons.arrow_forward_ios_rounded,
+                  const Icon(Icons.arrow_forward_ios_rounded,
                       size: 10, color: _blueAccent),
                 ],
               ),
@@ -799,11 +815,11 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
                   color: _cardShadow,
                   blurRadius: 10,
-                  offset: const Offset(0, 3)),
+                  offset: Offset(0, 3)),
             ],
           ),
           child: Column(
@@ -832,8 +848,8 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
                         color: a.color.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(a.icon,
-                          size: isSmall ? 20 : 22, color: a.color),
+                      child:
+                          Icon(a.icon, size: isSmall ? 20 : 22, color: a.color),
                     ),
                     SizedBox(width: isSmall ? 12 : 14),
                     Expanded(
@@ -886,6 +902,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       ],
     );
   }
+
   Widget _buildBottomNav(bool isSmall) {
     final items = [
       _NavItem(Icons.dashboard_rounded, 'Dashboard'),
@@ -920,8 +937,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
             onTap: () => setState(() => _navIndex = i),
             behavior: HitTestBehavior.opaque,
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -947,7 +963,9 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
                       items[i].icon,
                       size: isSmall ? 22 : 24,
                       color: isDataAI
-                          ? (selected ? _blueAccent : _blueAccent.withOpacity(0.7))
+                          ? (selected
+                              ? _blueAccent
+                              : _blueAccent.withOpacity(0.7))
                           : (selected ? _blueAccent : _textMuted),
                     ),
                   ),
@@ -957,8 +975,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: isSmall ? 9 : 10,
-                      fontWeight:
-                          selected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                       color: isDataAI
                           ? _blueAccent
                           : (selected ? _blueAccent : _textMuted),
@@ -973,6 +990,7 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
     );
   }
 }
+
 class _LineChartPainter extends CustomPainter {
   final Color color;
   final Color fillColor;
@@ -1022,11 +1040,8 @@ class _LineChartPainter extends CustomPainter {
       end: Alignment.bottomCenter,
       colors: [color.withOpacity(0.15), color.withOpacity(0.0)],
     );
-    canvas.drawPath(
-        fillPath,
-        Paint()
-          ..shader =
-              fillGradient.createShader(Rect.fromLTWH(0, 0, w, h)));
+    canvas.drawPath(fillPath,
+        Paint()..shader = fillGradient.createShader(Rect.fromLTWH(0, 0, w, h)));
     canvas.drawPath(
         path,
         Paint()
@@ -1042,9 +1057,11 @@ class _LineChartPainter extends CustomPainter {
     canvas.drawCircle(Offset(lastX, lastY), 3.5, Paint()..color = color);
     canvas.drawCircle(Offset(lastX, lastY), 1.5, Paint()..color = Colors.white);
   }
+
   @override
   bool shouldRepaint(covariant _LineChartPainter old) => false;
 }
+
 class _DonutChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -1080,14 +1097,17 @@ class _DonutChartPainter extends CustomPainter {
       startAngle += sweepAngle;
     }
   }
+
   @override
   bool shouldRepaint(covariant _DonutChartPainter old) => false;
 }
+
 class _DonutSegment {
   final double value;
   final Color color;
   _DonutSegment(this.value, this.color);
 }
+
 class _Atividade {
   final IconData icon;
   final Color color;
@@ -1096,6 +1116,7 @@ class _Atividade {
   final String tempo;
   _Atividade(this.icon, this.color, this.titulo, this.descricao, this.tempo);
 }
+
 class _NavItem {
   final IconData icon;
   final String label;

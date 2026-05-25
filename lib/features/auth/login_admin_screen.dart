@@ -34,8 +34,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
 
-// Domínio interno — invisível ao usuário
-const _kDominio = '@admin.conectasaudepi';
+// Domínio interno — invisível ao usuário por padrão
+const _kDominio = '@conectasaude.com';
 
 // ───────────────────────────────────────────────────────────────────
 class LoginAdminScreen extends StatefulWidget {
@@ -47,7 +47,7 @@ class LoginAdminScreen extends StatefulWidget {
 class _LoginAdminScreenState extends State<LoginAdminScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _usuarioCtrl = TextEditingController(); // só o "usuário" sem @dominio
+  final _usuarioCtrl = TextEditingController(); // Usuário ou e-mail completo
   final _senhaCtrl = TextEditingController();
 
   bool _senhaVis = false;
@@ -115,10 +115,24 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
           .collection('usuarios')
           .doc(uid)
           .get();
+      // Verifica se o documento existe e se o campo 'perfil' é 'admin'
       return doc.exists && doc.data()?['perfil'] == 'admin';
     } catch (_) {
       return false;
     }
+  }
+
+  // ── Lógica de Transformação de Usuário ──────────────────────────
+  /// Converte o username digitado para o e-mail completo do Firebase.
+  /// Se já contiver '@', usa o valor direto (backward compatibility).
+  String _processarIdentidade(String input) {
+    final raw = input.trim().toLowerCase().replaceAll(' ', '');
+    
+    // Se contém @, assume que é um e-mail completo e não transforma
+    if (raw.contains('@')) return raw;
+
+    // Caso contrário, aplica a regra de negócio: username + @conectasaude.com
+    return '$raw$_kDominio';
   }
 
   // ── Login ──────────────────────────────────────────────────────
@@ -129,18 +143,17 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
       _erro = null;
     });
 
-    // Compõe o e-mail interno com o domínio fake
-    final usuario = _usuarioCtrl.text.trim().toLowerCase();
-    final emailInterno = '$usuario$_kDominio';
+    // 1. Processa a identidade (Username -> Email)
+    final emailAuth = _processarIdentidade(_usuarioCtrl.text);
 
     try {
-      // 1. Autentica no Firebase
+      // 2. Autentica no Firebase
       final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailInterno,
+        email: emailAuth,
         password: _senhaCtrl.text,
       );
 
-      // 2. Verifica perfil admin no Firestore
+      // 3. Verifica perfil admin no Firestore
       final isAdmin = await _verificarAdmin(cred.user!.uid);
 
       if (!isAdmin) {
@@ -154,7 +167,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
         return;
       }
 
-      // 3. Registra último acesso
+      // 4. Registra último acesso
       try {
         await FirebaseFirestore.instance
             .collection('usuarios')
@@ -163,10 +176,10 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
           'ultimoAcesso': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       } catch (_) {
-        // Não bloqueia o acesso
+        // Não bloqueia o acesso por erro no registro de log
       }
 
-      // 4. Redireciona para o painel admin
+      // 5. Redireciona para o painel admin
       if (mounted) Navigator.of(context).pushReplacementNamed('/admin/home');
     } on FirebaseAuthException catch (e) {
       setState(() => _erro = _traduzirErro(e.code));
@@ -177,11 +190,12 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
     }
   }
 
-  // ── Tradução de erros ──────────────────────────────────────────
+  // ── Tradução de erros (User-Friendly) ──────────────────────────
   String _traduzirErro(String code) => switch (code) {
         'user-not-found' => 'Usuário não encontrado.',
         'wrong-password' => 'Senha incorreta.',
         'invalid-credential' => 'Usuário ou senha inválidos.',
+        'invalid-email' => 'Formato de usuário inválido.',
         'too-many-requests' => 'Muitas tentativas. Aguarde e tente novamente.',
         'network-request-failed' => 'Sem conexão. Verifique sua rede.',
         'user-disabled' => 'Este acesso foi desativado.',
@@ -228,7 +242,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
                         const SizedBox(height: 12),
                       ],
 
-                      // ── Campo: usuário ──────────────────────────
+                      // ── Campo: usuário (Username) ───────────────
                       _s(2, _buildCampoUsuario()),
                       const SizedBox(height: 14),
 
@@ -451,7 +465,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
         ]),
       );
 
-  // ── Campo Usuário ───────────────────────────────────────────────
+  // ── Campo Usuário (Username) ────────────────────────────────────
   Widget _buildCampoUsuario() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,29 +483,33 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.next,
           autocorrect: false,
+          enableSuggestions: false,
           style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 14,
               color: Colors.white,
               fontWeight: FontWeight.w500),
-          decoration: InputDecoration(
-            hintText: 'seu.usuario',
-            prefixIcon: const Icon(Icons.person_outline_rounded,
+          decoration: const InputDecoration(
+            hintText: 'Digite seu nome de usuário',
+            prefixIcon: Icon(Icons.person_outline_rounded,
                 color: AppColors.textTertiary, size: 19),
-            // Mostra o domínio fake ao lado — só visual, não editável
-            suffix: Text(
-              _kDominio,
-              style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 11,
-                  color: AppColors.primary.withOpacity(0.40),
-                  fontWeight: FontWeight.w500),
-            ),
           ),
           validator: (v) {
             if (v == null || v.trim().isEmpty) return 'Informe seu usuário';
-            if (v.trim().contains(' ')) return 'Usuário não pode ter espaços';
-            if (v.trim().contains('@')) return 'Digite só o usuário, sem @';
+            
+            final raw = v.trim();
+            if (raw.contains(' ')) return 'O usuário não pode conter espaços';
+            
+            // Se for e-mail completo (contém @), valida formato básico
+            if (raw.contains('@')) {
+              if (!raw.contains('.') || raw.length < 5) return 'E-mail inválido';
+            } else {
+              // Se for só username, valida caracteres permitidos (letras, números, _)
+              final usernameRegex = RegExp(r'^[a-zA-Z0-9_]+$');
+              if (!usernameRegex.hasMatch(raw)) {
+                return 'Use apenas letras, números ou underscore (_)';
+              }
+            }
             return null;
           },
         ),

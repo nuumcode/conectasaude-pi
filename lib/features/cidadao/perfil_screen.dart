@@ -15,6 +15,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../core/theme/app_theme.dart';
 import '/core/animations/app_animations.dart';
+import 'package:conecta_saude_pi/features/cidadao/cidadao_escala_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/cidadao_fila_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/dashboard_cidadao.dart';
 import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
 import 'package:conecta_saude_pi/features/widgets/app_header.dart';
 import 'package:conecta_saude_pi/features/auth/login_cidadao_screen.dart';
@@ -94,7 +97,30 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   void _onAbaChanged(dynamic aba) {
     if (aba.index == DrawerAba.perfil.index) return;
-    Navigator.of(context).pushReplacementNamed('/home');
+    final Widget? destino = _resolverAba(aba);
+    if (destino != null) {
+      Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Em breve.'),
+        duration: Duration(seconds: 1),
+      ));
+    }
+  }
+
+  Widget? _resolverAba(dynamic aba) {
+    switch (aba) {
+      case DrawerAba.inicio:
+        return const HomeCidadaoScreen();
+      case DrawerAba.agendamentos:
+        return const CidadaoEscalaScreen();
+      case DrawerAba.fila:
+        return const CidadaoFilaScreen();
+      case DrawerAba.perfil:
+        return const PerfilScreen();
+      default:
+        return null;
+    }
   }
 
   // ── Editar perfil (modal) ────────────────────────────────────────
@@ -245,6 +271,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
             userPhoto: _userPhoto,
             onLogout: _logout,
             onMenuPressed: null,
+            onProfilePressed: () => _onAbaChanged(DrawerAba.perfil),
           ),
           Expanded(child: _conteudo(true)),
         ]),
@@ -259,6 +286,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         userPhoto: _userPhoto,
         onLogout: _logout,
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        onProfilePressed: () => _onAbaChanged(DrawerAba.perfil),
       ),
       Expanded(child: _conteudo(false)),
     ]);
@@ -858,7 +886,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: AppColors.primaryDeep,
+          activeThumbColor: AppColors.primaryDeep,
         ),
       ]),
     );
@@ -1013,7 +1041,7 @@ class _PerfilEditSheetState extends State<_PerfilEditSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _SectionHeader(
+                        const _SectionHeader(
                             icon: Icons.badge_outlined,
                             titulo: 'Dados pessoais'),
                         _Field(
@@ -1052,7 +1080,7 @@ class _PerfilEditSheetState extends State<_PerfilEditSheet> {
                           hint: 'DD/MM/AAAA',
                         ),
                         const SizedBox(height: 8),
-                        _SectionHeader(
+                        const _SectionHeader(
                             icon: Icons.favorite_border_rounded,
                             titulo: 'Saúde'),
                         _Dropdown(
@@ -1462,7 +1490,7 @@ class _Dropdown extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: DropdownButtonFormField<String>(
-        value: items.contains(value) ? value : '',
+        initialValue: items.contains(value) ? value : '',
         // ✅ Fundo BRANCO no menu suspenso — sem contaminação do tema escuro
         dropdownColor: Colors.white,
         elevation: 4,

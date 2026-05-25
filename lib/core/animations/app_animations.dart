@@ -21,13 +21,13 @@ class ArcRingPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5
-        ..shader = SweepGradient(
-          colors: const [
+        ..shader = const SweepGradient(
+          colors: [
             AppColors.blueLt,
             AppColors.greenLt,
             Colors.transparent
           ],
-          stops: const [0, 0.55, 1],
+          stops: [0, 0.55, 1],
           startAngle: 0,
           endAngle: math.pi * 2,
         ).createShader(Rect.fromLTWH(0, 0, s.width, s.height)),
@@ -242,8 +242,9 @@ class DotGridPainter extends CustomPainter {
       ..color = Colors.white
       ..style = PaintingStyle.fill;
     for (double x = 40; x < s.width; x += 40)
-      for (double y = 40; y < s.height; y += 40)
+      for (double y = 40; y < s.height; y += 40) {
         canvas.drawCircle(Offset(x, y), 1.0, p);
+      }
   }
 
   @override

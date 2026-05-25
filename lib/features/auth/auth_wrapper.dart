@@ -17,7 +17,6 @@
 
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +24,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
 
 import '../cidadao/dashboard_cidadao.dart';
-import '../secretaria/dashboard/secretaria_dashboard_screen.dart';
+import '../secretaria/secretaria_dashboard_screen.dart';
 import 'login_cidadao_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
@@ -171,8 +170,8 @@ class _AuthWrapperState extends State<AuthWrapper>
     if (!mounted) return;
 
     // ✅ PONTO CRÍTICO PARA DEEP LINKS:
-    // Se o usuário entrou direto por uma URL tipo /admin, o Flutter empilha 
-    // o /admin sobre o /. Se o AuthWrapper (que está no /) chamar 
+    // Se o usuário entrou direto por uma URL tipo /admin, o Flutter empilha
+    // o /admin sobre o /. Se o AuthWrapper (que está no /) chamar
     // pushReplacement agora, ele vai substituir o /admin pelo /login.
     // Verificamos se ainda somos a rota "topo". Se não for, paramos por aqui.
     if (ModalRoute.of(context)?.isCurrent == false) {
@@ -231,7 +230,7 @@ class _AuthWrapperState extends State<AuthWrapper>
         AnimatedBuilder(
           animation: _bgFadeCtrl,
           builder: (_, child) => Opacity(opacity: _bgFade.value, child: child!),
-          child: AppBackground(child: const SizedBox.expand()),
+          child: const AppBackground(child: SizedBox.expand()),
         ),
 
         // Linha topo
