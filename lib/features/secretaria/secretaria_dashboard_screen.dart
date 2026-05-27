@@ -16,8 +16,7 @@ class SecretariaDashboardScreen extends StatefulWidget {
       _SecretariaDashboardScreenState();
 }
 
-class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
-    with SingleTickerProviderStateMixin {
+class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   int _navIndex = 0;
   static const _bgMain = Color(0xFFF2F6FC);
@@ -29,24 +28,8 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
   static const _purpleAccent = Color(0xFF7C3AED);
   static const _blueAccent = Color(0xFF2563EB);
   static const _greenAccent = Color(0xFF10B981);
-  late AnimationController _animController;
 
   User? get _user => FirebaseAuth.instance.currentUser;
-
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..forward();
-  }
-
-  @override
-  void dispose() {
-    _animController.dispose();
-    super.dispose();
-  }
 
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
@@ -152,20 +135,32 @@ class _SecretariaDashboardScreenState extends State<SecretariaDashboardScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildWelcomeBanner(isSmall),
+          AppEntrance(index: 0, child: _buildWelcomeBanner(isSmall)),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: isSmall ? 16 : 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: isSmall ? 20 : 24),
-                _buildStatGrid(isSmall),
+                AppEntrance(
+                    index: 1,
+                    delay: const Duration(milliseconds: 100),
+                    child: _buildStatGrid(isSmall)),
                 SizedBox(height: isSmall ? 24 : 28),
-                _buildPlatformUsage(isSmall),
+                AppEntrance(
+                    index: 2,
+                    delay: const Duration(milliseconds: 200),
+                    child: _buildPlatformUsage(isSmall)),
                 SizedBox(height: isSmall ? 24 : 28),
-                _buildAdminControls(isSmall),
+                AppEntrance(
+                    index: 3,
+                    delay: const Duration(milliseconds: 300),
+                    child: _buildAdminControls(isSmall)),
                 SizedBox(height: isSmall ? 24 : 28),
-                _buildRecentActivity(isSmall),
+                AppEntrance(
+                    index: 4,
+                    delay: const Duration(milliseconds: 400),
+                    child: _buildRecentActivity(isSmall)),
                 const SizedBox(height: 100),
               ],
             ),

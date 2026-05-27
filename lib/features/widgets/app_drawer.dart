@@ -233,6 +233,15 @@ class AppDrawer extends StatelessWidget {
         label: 'Fila do Posto',
         aba: DrawerAba.fila,
       ),
+      const SizedBox(height: 16),
+      _buildSectionLabel('EMERGÊNCIA'),
+      _buildItem(
+        context,
+        icon: Icons.emergency_rounded,
+        label: 'Chamadas SOS',
+        aba: DrawerAba.emergencia,
+        isEmergency: true,
+      ),
     ];
   }
 

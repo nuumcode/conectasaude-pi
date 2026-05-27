@@ -22,11 +22,7 @@ class ArcRingPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5
         ..shader = const SweepGradient(
-          colors: [
-            AppColors.blueLt,
-            AppColors.greenLt,
-            Colors.transparent
-          ],
+          colors: [AppColors.blueLt, AppColors.greenLt, Colors.transparent],
           stops: [0, 0.55, 1],
           startAngle: 0,
           endAngle: math.pi * 2,
@@ -48,7 +44,7 @@ class InnerRingPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1
-        ..color = AppColors.blue.withOpacity(0.2),
+        ..color = AppColors.blue.withValues(alpha: 0.2),
     );
   }
 
@@ -288,6 +284,80 @@ class GoogleLogoPainter extends CustomPainter {
   bool shouldRepaint(_) => false;
 }
 
+// ── WIDGETS DE ANIMAÇÃO PADRONIZADOS ────────────────────────────────
+
+/// Animação de entrada (Fade + Slide) padronizada.
+/// Ideal para cards, botões e campos de formulário.
+class AppEntrance extends StatelessWidget {
+  final Widget child;
+  final int index;
+  final Duration delay;
+  final Curve curve;
+  final Offset offset;
+
+  const AppEntrance({
+    super.key,
+    required this.child,
+    this.index = 0,
+    this.delay = Duration.zero,
+    this.curve = Curves.easeOutQuart,
+    this.offset = const Offset(0, 12),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: Future.delayed(delay),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return Opacity(opacity: 0, child: child);
+        }
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 650),
+          curve: curve,
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset.lerp(offset, Offset.zero, value)!,
+                child: child,
+              ),
+            );
+          },
+          child: child,
+        );
+      },
+    );
+  }
+}
+
+/// Switcher com fade suave para troca de estados (ex: Login p/ Cadastro).
+class AppFadeSwitcher extends StatelessWidget {
+  final Widget child;
+  final Duration duration;
+
+  const AppFadeSwitcher({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 300),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: duration,
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      transitionBuilder: (child, anim) => FadeTransition(
+        opacity: anim,
+        child: child,
+      ),
+      child: child,
+    );
+  }
+}
+
 // ── WIDGETS REUTILIZÁVEIS ────────────────────────────────────────────
 
 /// Fundo compartilhado — usado na LoginCidadaoScreen
@@ -308,40 +378,49 @@ class AppBackground extends StatelessWidget {
         ),
       ),
       child: Stack(children: [
-        Positioned(
-            top: -sz.height * .12,
-            right: -sz.width * .18,
-            child: AppOrb(size: 320, color: AppColors.blue.withOpacity(.13))),
-        Positioned(
-            top: sz.height * .06,
-            left: -sz.width * .10,
-            child: AppOrb(size: 200, color: AppColors.blueLt.withOpacity(.09))),
-        Positioned(
-            bottom: -sz.height * .08,
-            left: -sz.width * .14,
-            child:
-                AppOrb(size: 260, color: AppColors.greenLt.withOpacity(.09))),
-        Positioned(
-            bottom: 32,
-            right: 18,
-            child: Opacity(
-                opacity: .09,
-                child: CustomPaint(
-                    size: const Size(100, 100), painter: CircleEcgPainter()))),
-        Positioned(
-            bottom: 64,
-            left: -22,
-            child: Opacity(
-                opacity: .07,
-                child: CustomPaint(
-                    size: const Size(90, 90), painter: ArcDecoPainter()))),
-        Positioned.fill(
-            child: Opacity(
-                opacity: .07,
-                child: CustomPaint(painter: CornerCrossesPainter()))),
-        Positioned.fill(
-            child: Opacity(
-                opacity: .025, child: CustomPaint(painter: DotGridPainter()))),
+        // Static decorative elements in a RepaintBoundary
+        RepaintBoundary(
+          child: Stack(children: [
+            Positioned(
+                top: -sz.height * .12,
+                right: -sz.width * .18,
+                child:
+                    AppOrb(size: 320, color: AppColors.blue.withValues(alpha: .13))),
+            Positioned(
+                top: sz.height * .06,
+                left: -sz.width * .10,
+                child: AppOrb(
+                    size: 200, color: AppColors.blueLt.withValues(alpha: .09))),
+            Positioned(
+                bottom: -sz.height * .08,
+                left: -sz.width * .14,
+                child: AppOrb(
+                    size: 260, color: AppColors.greenLt.withValues(alpha: .09))),
+            Positioned(
+                bottom: 32,
+                right: 18,
+                child: Opacity(
+                    opacity: .09,
+                    child: CustomPaint(
+                        size: const Size(100, 100),
+                        painter: CircleEcgPainter()))),
+            Positioned(
+                bottom: 64,
+                left: -22,
+                child: Opacity(
+                    opacity: .07,
+                    child: CustomPaint(
+                        size: const Size(90, 90), painter: ArcDecoPainter()))),
+            Positioned.fill(
+                child: Opacity(
+                    opacity: .07,
+                    child: CustomPaint(painter: CornerCrossesPainter()))),
+            Positioned.fill(
+                child: Opacity(
+                    opacity: .025,
+                    child: CustomPaint(painter: DotGridPainter()))),
+          ]),
+        ),
         child,
       ]),
     );
@@ -405,15 +484,15 @@ class AppSplashFooter extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.blueLt.withOpacity(.18)),
-              color: const Color(0xFF0D2B5C).withOpacity(.55),
+              border: Border.all(color: AppColors.blueLt.withValues(alpha: .18)),
+              color: const Color(0xFF0D2B5C).withValues(alpha: .55),
             ),
             child: Text(label,
                 style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 9,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white.withOpacity(.30),
+                    color: Colors.white.withValues(alpha: .30),
                     letterSpacing: 1.4)),
           ),
           const SizedBox(height: 6),
@@ -453,11 +532,14 @@ class AppFadeRoute<T> extends PageRouteBuilder<T> {
         );
 }
 
-/// Transição Hero-aware: AuthWrapper → LoginCidadaoScreen
+/// Transição Hero-aware: AuthWrapper → LoginCidadaoScreen / Dashboards
 ///
-/// • Fade in da Login com easeOutCubic puro (SEM Interval — evita crash)
-/// • Slide up ultrasutil (+3% → 0)
+/// • Fade puro com easeOutCubic — SEM slide
+/// • O slide foi removido: ele somava com a animação stagger interna
+///   dos formulários causando o efeito "tudo subindo junto" (dupla animação).
 /// • Hero 'brand-logo' voa automaticamente (Flutter gerencia)
+/// • Duração 700ms — os formulários só animam após esse tempo (ver initState
+///   de LoginCidadaoScreen e LoginAdminScreen com delay de 650ms).
 class AppHeroFadeRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
 
@@ -467,21 +549,12 @@ class AppHeroFadeRoute<T> extends PageRouteBuilder<T> {
           transitionDuration: const Duration(milliseconds: 700),
           reverseTransitionDuration: const Duration(milliseconds: 400),
           transitionsBuilder: (ctx, anim, secAnim, child) {
-            // SEM Interval — Interval com end > 1.0 causa crash em curves.dart:180
+            // FIX: fade puro, sem slide — evita sobreposição com stagger interno
             final fade = CurvedAnimation(
               parent: anim,
-              curve: Curves.easeOutCubic, // suave do início ao fim
+              curve: Curves.easeOutCubic,
             );
-            final slide = Tween<Offset>(
-              begin: const Offset(0, 0.03),
-              end: Offset.zero,
-            ).animate(
-                CurvedAnimation(parent: anim, curve: Curves.easeOutCubic));
-
-            return FadeTransition(
-              opacity: fade,
-              child: SlideTransition(position: slide, child: child),
-            );
+            return FadeTransition(opacity: fade, child: child);
           },
         );
 }

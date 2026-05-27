@@ -31,6 +31,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/widgets/app_brand_logo.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
 
@@ -63,11 +64,27 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
   @override
   void initState() {
     super.initState();
+    _checkAlreadyLoggedIn();
 
-    // Anima entrada do formulário
-    Future.delayed(const Duration(milliseconds: 400), () {
+    // FIX: aguarda a transição da rota (AppHeroFadeRoute = 700ms) terminar
+    // antes de animar os elementos internos — evita dupla animação visível.
+    Future.delayed(const Duration(milliseconds: 650), () {
       if (mounted) _entryCtrl.forward();
     });
+  }
+
+  Future<void> _checkAlreadyLoggedIn() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final perfil = await _obterPerfil(user.uid);
+      if (mounted && perfil != null) {
+        if (perfil == 'admin') {
+          Navigator.of(context).pushReplacementNamed('/admin/home');
+        } else if (perfil == 'posto') {
+          Navigator.of(context).pushReplacementNamed('/posto/home');
+        }
+      }
+    }
   }
 
   @override
@@ -129,7 +146,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
   /// Se já contiver '@', usa o valor direto (backward compatibility).
   String _processarIdentidade(String input) {
     final raw = input.trim().toLowerCase().replaceAll(' ', '');
-    
+
     // Se contém @, assume que é um e-mail completo e não transforma
     if (raw.contains('@')) return raw;
 
@@ -318,89 +335,15 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
     );
   }
 
-  // ── Identidade visual (cadeado + logo) ─────────────────────────
+  // ── Identidade visual (UNIFICADA COM HERO) ─────────────────────
   Widget _buildIdentidade() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Cadeado animado
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: AppColors.primary.withOpacity(0.25), width: 1.5),
-            color: AppColors.primary.withOpacity(0.06),
-          ),
-          child: Stack(alignment: Alignment.center, children: [
-            // Glow de fundo
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: RadialGradient(colors: [
-                  AppColors.primary.withOpacity(0.10),
-                  Colors.transparent,
-                ]),
-              ),
-            ),
-            const Icon(
-              Icons.lock_rounded,
-              color: AppColors.primary,
-              size: 30,
-            ),
-          ]),
-        ),
+        // Logo Centralizada com Hero
+        const AppBrandLogo(size: 72, showText: true),
 
         const SizedBox(height: 16),
-
-        // Nome do sistema
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(children: [
-            const TextSpan(
-              text: 'Conecta',
-              style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w300,
-                  color: Colors.white,
-                  letterSpacing: -0.3),
-            ),
-            TextSpan(
-              text: 'Saúde',
-              style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.blueLt,
-                  letterSpacing: -0.3,
-                  shadows: [
-                    Shadow(
-                        color: AppColors.blueLt.withOpacity(0.4),
-                        blurRadius: 10)
-                  ]),
-            ),
-            TextSpan(
-              text: 'PI',
-              style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.greenLt,
-                  letterSpacing: -0.3,
-                  shadows: [
-                    Shadow(
-                        color: AppColors.greenLt.withOpacity(0.5),
-                        blurRadius: 10)
-                  ]),
-            ),
-          ]),
-        ),
-
-        const SizedBox(height: 4),
 
         // Badge "Painel Administrativo"
         Container(
@@ -504,13 +447,15 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
           ),
           validator: (v) {
             if (v == null || v.trim().isEmpty) return 'Informe seu usuário';
-            
+
             final raw = v.trim();
             if (raw.contains(' ')) return 'O usuário não pode conter espaços';
-            
+
             // Se for e-mail completo (contém @), valida formato básico
             if (raw.contains('@')) {
-              if (!raw.contains('.') || raw.length < 5) return 'E-mail inválido';
+              if (!raw.contains('.') || raw.length < 5) {
+                return 'E-mail inválido';
+              }
             } else {
               // Se for só username, valida caracteres permitidos (letras, números, _)
               final usernameRegex = RegExp(r'^[a-zA-Z0-9_]+$');

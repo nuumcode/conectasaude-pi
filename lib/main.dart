@@ -14,7 +14,9 @@
 //    3. Logado + perfil=cidadão  → /home
 // ═══════════════════════════════════════════════════════════════════
 
+import 'package:conecta_saude_pi/features/cidadao/cidadao_emergencia_screen.dart';
 import 'package:conecta_saude_pi/features/posto/posto_dashboard_screen.dart';
+import 'package:conecta_saude_pi/features/posto/posto_emergencia_screen.dart';
 import 'package:conecta_saude_pi/features/secretaria/secretaria_dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -36,6 +38,15 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // ✅ Pré-carregamento global de assets críticos para evitar o "pisca" na logo
+  // Fazemos isso antes do runApp para que no primeiro frame a logo já esteja pronta.
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  binding.addPostFrameCallback((_) async {
+    final BuildContext context = binding.rootElement!;
+    precacheImage(const AssetImage('assets/logo-var01.png'), context);
+  });
+
   runApp(const ConectaSaudeApp());
 }
 
@@ -48,14 +59,15 @@ class ConectaSaudeApp extends StatelessWidget {
       title: 'ConectaSaúdePI',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      initialRoute: '/',
+      home: const AuthWrapper(),
       routes: {
-        '/': (_) => const AuthWrapper(),
         '/login': (_) => const LoginCidadaoScreen(),
         '/home': (_) => const HomeCidadaoScreen(),
         '/admin': (_) => const LoginAdminScreen(),
         '/admin/home': (_) => const SecretariaDashboardScreen(),
         '/posto/home': (_) => const PostoDashboardScreen(),
+        '/emergencia': (_) => const CidadaoEmergenciaScreen(),
+        '/posto/emergencia': (_) => const PostoEmergenciaScreen(),
         '/perfil': (_) => const PerfilScreen(),
         '/setup-admin': (_) => const AdminSetupPage(),
       },

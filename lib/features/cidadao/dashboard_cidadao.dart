@@ -14,6 +14,7 @@
 import 'package:conecta_saude_pi/features/auth/login_cidadao_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/cidadao_escala_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/cidadao_fila_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/cidadao_emergencia_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/perfil_screen.dart';
 import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
 import 'package:conecta_saude_pi/features/widgets/app_header.dart';
@@ -56,34 +57,6 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
     super.dispose();
   }
 
-  // ── Stagger helper ──────────────────────────────────────────────
-  Widget _st(int i, Widget child) {
-    final fade = CurvedAnimation(
-      parent: _entryCtrl,
-      curve: Interval(
-        (i * 0.10).clamp(0.0, 0.5),
-        ((i * 0.10) + 0.50).clamp(0.0, 1.0),
-        curve: Curves.easeOut,
-      ),
-    );
-    final slide = Tween(begin: 20.0, end: 0.0).animate(CurvedAnimation(
-      parent: _entryCtrl,
-      curve: Interval(
-        (i * 0.10).clamp(0.0, 0.5),
-        ((i * 0.10) + 0.50).clamp(0.0, 1.0),
-        curve: Curves.easeOutCubic,
-      ),
-    ));
-    return AnimatedBuilder(
-      animation: _entryCtrl,
-      builder: (_, __) => Opacity(
-        opacity: fade.value,
-        child:
-            Transform.translate(offset: Offset(0, slide.value), child: child),
-      ),
-    );
-  }
-
   // ── Logout ──────────────────────────────────────────────────────
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
@@ -121,6 +94,8 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
         return const CidadaoEscalaScreen();
       case DrawerAba.fila:
         return const CidadaoFilaScreen();
+      case DrawerAba.emergencia:
+        return const CidadaoEmergenciaScreen();
       case DrawerAba.perfil:
         return const PerfilScreen();
       default:
@@ -219,18 +194,29 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _st(0, _sectionLabel(Icons.show_chart_rounded, 'Resumo rápido')),
+              AppEntrance(
+                  index: 0,
+                  child: _sectionLabel(Icons.show_chart_rounded, 'Resumo rápido')),
               const SizedBox(height: 12),
-              _st(1, _buildResumoRapido()),
+              AppEntrance(
+                  index: 1,
+                  delay: const Duration(milliseconds: 100),
+                  child: _buildResumoRapido()),
               const SizedBox(height: 28),
-              _st(2,
-                  _sectionLabel(Icons.rocket_launch_rounded, 'Ações rápidas')),
+              AppEntrance(
+                  index: 2,
+                  delay: const Duration(milliseconds: 200),
+                  child: _sectionLabel(Icons.rocket_launch_rounded, 'Ações rápidas')),
               const SizedBox(height: 12),
-              _st(3, _buildAcoesRapidas()),
+              AppEntrance(
+                  index: 3,
+                  delay: const Duration(milliseconds: 300),
+                  child: _buildAcoesRapidas()),
               const SizedBox(height: 28),
-              _st(
-                  4,
-                  _sectionLabel(
+              AppEntrance(
+                  index: 4,
+                  delay: const Duration(milliseconds: 400),
+                  child: _sectionLabel(
                     Icons.notifications_none_rounded,
                     'Notificações recentes',
                     trailing: TextButton(
@@ -244,7 +230,10 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
                     ),
                   )),
               const SizedBox(height: 12),
-              _st(5, _buildNotificacoes()),
+              AppEntrance(
+                  index: 5,
+                  delay: const Duration(milliseconds: 500),
+                  child: _buildNotificacoes()),
             ],
           ),
         ),
@@ -356,7 +345,7 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen>
           icon: Icons.emergency_rounded,
           label: 'Emergência',
           destaque: true,
-          onTap: () {}),
+          onTap: () => _onAbaChanged(DrawerAba.emergencia)),
     ];
 
     // Calcula padding total para saber a largura real disponível

@@ -1,3 +1,4 @@
+import 'package:conecta_saude_pi/features/posto/posto_emergencia_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../widgets/app_header.dart';
@@ -44,6 +45,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
     if (aba == DrawerAba.inicio) destino = const PostoDashboardScreen();
     if (aba == DrawerAba.ausencia) destino = const PostoAusenciaScreen();
     if (aba == DrawerAba.fila) destino = const PostoFilaScreen();
+    if (aba == DrawerAba.emergencia) destino = const PostoEmergenciaScreen();
 
     if (destino != null) {
       Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
@@ -179,7 +181,8 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
   Widget _buildWelcomeBanner(bool isSmall) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(isSmall ? 14 : 20, 20, isSmall ? 14 : 20, 24),
+      padding:
+          EdgeInsets.fromLTRB(isSmall ? 14 : 20, 20, isSmall ? 14 : 20, 24),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.bgMid, AppColors.bgBase],
@@ -271,7 +274,8 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 )),
             Row(
               children: [
-                const Icon(Icons.calendar_today_rounded, size: 14, color: _textMuted),
+                const Icon(Icons.calendar_today_rounded,
+                    size: 14, color: _textMuted),
                 const SizedBox(width: 6),
                 Text(
                   _getDataHoje(),

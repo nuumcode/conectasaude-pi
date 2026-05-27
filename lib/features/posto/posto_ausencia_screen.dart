@@ -1,4 +1,5 @@
 // TODO Implement this library.
+import 'package:conecta_saude_pi/features/posto/posto_emergencia_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -27,7 +28,7 @@ class PostoAusenciaScreen extends StatefulWidget {
 
 class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+
   User? get _user => FirebaseAuth.instance.currentUser;
 
   Future<void> _logout() async {
@@ -47,6 +48,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
     if (aba == DrawerAba.inicio) destino = const PostoDashboardScreen();
     if (aba == DrawerAba.chamar) destino = const PostoChamarScreen();
     if (aba == DrawerAba.fila) destino = const PostoFilaScreen();
+    if (aba == DrawerAba.emergencia) destino = const PostoEmergenciaScreen();
 
     if (destino != null) {
       Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
@@ -70,7 +72,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
   Widget build(BuildContext context) {
     final screenW = MediaQuery.of(context).size.width;
     final isDesktop = screenW >= 700;
-    
+
     final hoje = _ausencias.where((a) => a.chamadas < 3).toList();
     final perdidas = _ausencias.where((a) => a.chamadas >= 3).toList();
 
@@ -88,7 +90,9 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
               onLogout: _logout,
               role: UserRole.posto,
             ),
-      body: isDesktop ? _buildDesktop(hoje, perdidas) : _buildMobile(hoje, perdidas),
+      body: isDesktop
+          ? _buildDesktop(hoje, perdidas)
+          : _buildMobile(hoje, perdidas),
     );
   }
 
@@ -138,7 +142,8 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
     ]);
   }
 
-  Widget _buildScrollableContent(List<_Ausencia> hoje, List<_Ausencia> perdidas) {
+  Widget _buildScrollableContent(
+      List<_Ausencia> hoje, List<_Ausencia> perdidas) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(

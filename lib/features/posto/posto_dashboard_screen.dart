@@ -9,6 +9,7 @@ import '../auth/login_admin_screen.dart';
 import 'posto_fila_screen.dart';
 import 'posto_chamar_screen.dart';
 import 'posto_ausencia_screen.dart';
+import 'posto_emergencia_screen.dart';
 
 class PostoDashboardScreen extends StatefulWidget {
   const PostoDashboardScreen({super.key});
@@ -65,6 +66,7 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
     if (aba == DrawerAba.chamar) destino = const PostoChamarScreen();
     if (aba == DrawerAba.ausencia) destino = const PostoAusenciaScreen();
     if (aba == DrawerAba.fila) destino = const PostoFilaScreen();
+    if (aba == DrawerAba.emergencia) destino = const PostoEmergenciaScreen();
 
     if (destino != null) {
       Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
@@ -284,6 +286,14 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
                   color: _greenAccent,
                   isSmall: isSmall,
                   onTap: () => _onAbaChanged(DrawerAba.fila),
+                ),
+                _buildActionCard(
+                  width: cardW,
+                  icon: Icons.emergency_rounded,
+                  label: 'Chamadas SOS',
+                  color: Colors.red,
+                  isSmall: isSmall,
+                  onTap: () => _onAbaChanged(DrawerAba.emergencia),
                 ),
                 _buildActionCard(
                   width: cardW,
