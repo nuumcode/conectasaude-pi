@@ -1,14 +1,3 @@
-// ═══════════════════════════════════════════════════════════════════
-//  perfil_screen.dart  —  ConectaSaúdePI
-//  Tela de Perfil do Cidadão
-//
-//  ✅ Tema CLARO — alinhado ao dashboard_cidadao
-//  ✅ Reutiliza AppHeader + AppDrawer
-//  ✅ FirebaseAuth (displayName, email, photoURL) + Firestore extras
-//  ✅ Foto com fallback de iniciais (nunca quebra UI)
-//  ✅ Layout simplificado: Column com largura explícita em cada card
-//     (evita unbounded constraints em Row+Expanded)
-// ═══════════════════════════════════════════════════════════════════
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '/core/animations/app_animations.dart';
 import 'package:conecta_saude_pi/features/cidadao/cidadao_escala_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/cidadao_fila_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/cidadao_emergencia_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/dashboard_cidadao.dart';
 import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
 import 'package:conecta_saude_pi/features/widgets/app_header.dart';
@@ -96,15 +86,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   void _onAbaChanged(dynamic aba) {
-    if (aba.index == DrawerAba.perfil.index) return;
+    if (aba == DrawerAba.perfil) return;
     final Widget? destino = _resolverAba(aba);
     if (destino != null) {
       Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Em breve.'),
-        duration: Duration(seconds: 1),
-      ));
     }
   }
 
@@ -116,6 +101,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
         return const CidadaoEscalaScreen();
       case DrawerAba.fila:
         return const CidadaoFilaScreen();
+      case DrawerAba.emergencia:
+        return const CidadaoEmergenciaScreen();
       case DrawerAba.perfil:
         return const PerfilScreen();
       default:
@@ -129,16 +116,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _PerfilEditSheet(
-        nomeAtual: _userName,
-        emailAtual: _userEmail,
-        cpf: _cpf,
-        telefone: _telefone,
-        dataNascimento: _dataNascimento,
-        tipoSanguineo: _tipoSanguineo,
-        alergias: _alergias,
-        convenio: _convenio,
-      ),
+      builder: (_) => _PerfilEditSheet(),
     );
     if (result == null) return;
     await _salvarPerfil(result);
@@ -164,11 +142,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
     if (u == null) return;
     setState(() => _loading = true);
     try {
-      // Atualiza displayName no Auth se mudou
       if (r.nome.isNotEmpty && r.nome != _userName) {
         await u.updateDisplayName(r.nome);
       }
-      // Grava extras no Firestore
       await _firestore.collection('usuarios').doc(u.uid).set({
         'cpf': r.cpf,
         'telefone': r.telefone,
@@ -229,7 +205,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor:
-            sucesso ? AppColors.primaryDeep : const Color(0xFFFF6B6B),
+            sucesso ? AppColors.success : AppColors.error,
         content: Text(msg,
             style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)),
         duration: const Duration(seconds: 2),
@@ -244,7 +220,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: AppColors.bgBase,
       drawer: isDesktop ? null : _drawer(),
       body: isDesktop ? _desktop() : _mobile(),
     );
@@ -263,7 +239,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   Widget _desktop() {
     return Row(children: [
       SizedBox(width: 260, child: _drawer(fixed: true)),
-      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Container(width: 1, color: AppColors.borderDim),
       Expanded(
         child: Column(children: [
           AppHeader(
@@ -305,7 +281,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 900),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch, // ✅ largura definida
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _label(Icons.person_outline_rounded, 'Meu Perfil'),
               const SizedBox(height: 12),
@@ -352,14 +328,14 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Widget _label(IconData icon, String label) => Row(children: [
-        Icon(icon, color: AppColors.bgMid, size: 20),
+        Icon(icon, color: AppColors.primary, size: 20),
         const SizedBox(width: 8),
         Text(label,
             style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.bgBase)),
+                color: AppColors.textPrimary)),
       ]);
 
   // ── Hero ─────────────────────────────────────────────────────────
@@ -386,7 +362,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                           fontFamily: 'Poppins',
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.bgBase,
+                          color: AppColors.textPrimary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -395,7 +371,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.10),
+                          color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
@@ -404,7 +380,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                             fontFamily: 'Poppins',
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.primaryDeep,
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -414,7 +390,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 12,
-                          color: Color(0xFF64748B),
+                          color: AppColors.textSecondary,
                           height: 1.4,
                         ),
                       ),
@@ -424,7 +400,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
               ],
             ),
             const SizedBox(height: 14),
-            // Botão sempre full-width abaixo do hero — sem unbounded.
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -439,7 +414,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryDeep,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -464,12 +439,12 @@ class _PerfilScreenState extends State<PerfilScreen> {
           height: 78,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 2),
+            border: Border.all(color: AppColors.borderDim, width: 2),
           ),
           child: ClipOval(
             child: CircleAvatar(
               radius: 38,
-              backgroundColor: AppColors.bgMid,
+              backgroundColor: AppColors.surfaceDim,
               backgroundImage: hasPhoto ? NetworkImage(_userPhoto!) : null,
               onBackgroundImageError: hasPhoto
                   ? (e, s) => debugPrint('Falha foto perfil: $e')
@@ -483,7 +458,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         fontFamily: 'Poppins',
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: AppColors.primary,
                       ),
                     )
                   : null,
@@ -497,9 +472,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
             width: 16,
             height: 16,
             decoration: BoxDecoration(
-              color: AppColors.greenLt,
+              color: AppColors.success,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2.5),
+              border: Border.all(color: AppColors.bgBase, width: 2.5),
             ),
           ),
         ),
@@ -507,7 +482,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  // ── Pessoais ─────────────────────────────────────────────────────
   Widget _cardPessoais() => _Card(
         child: Padding(
           padding: const EdgeInsets.all(18),
@@ -527,7 +501,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
         ),
       );
 
-  // ── Saúde ────────────────────────────────────────────────────────
   Widget _cardSaude() => _Card(
         child: Padding(
           padding: const EdgeInsets.all(18),
@@ -540,18 +513,17 @@ class _PerfilScreenState extends State<PerfilScreen> {
               const SizedBox(height: 12),
               _infoRow(Icons.bloodtype_outlined, 'Tipo sanguíneo',
                   _tipoSanguineo,
-                  accent: AppColors.accentDeep),
+                  accent: AppColors.error),
               _infoRow(Icons.warning_amber_rounded, 'Alergias', _alergias,
-                  accent: AppColors.accentDeep),
+                  accent: AppColors.warning),
               _infoRow(Icons.medical_information_outlined, 'Convênio',
                   _convenio,
-                  accent: AppColors.primaryDeep),
+                  accent: AppColors.primary),
             ],
           ),
         ),
       );
 
-  // ── Emergência ───────────────────────────────────────────────────
   Widget _cardEmergencia() => _Card(
         child: Padding(
           padding: const EdgeInsets.all(18),
@@ -567,11 +539,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF6B6B).withOpacity(0.10),
+                    color: AppColors.error.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.person_outline_rounded,
-                      color: Color(0xFFFF6B6B), size: 22),
+                      color: AppColors.error, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -586,7 +558,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                           fontFamily: 'Poppins',
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.bgBase,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       if (_contatoEmergParentesco.isNotEmpty)
@@ -596,7 +568,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                           style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 11,
-                            color: Color(0xFF64748B),
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       if (_contatoEmergFone.isNotEmpty)
@@ -608,7 +580,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                               fontFamily: 'Poppins',
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.bgMid,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
@@ -631,8 +603,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primaryDeep,
-                    side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.borderDim),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -645,7 +617,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
         ),
       );
 
-  // ── Preferências ─────────────────────────────────────────────────
   Widget _cardPreferencias() => _Card(
         child: Padding(
           padding: const EdgeInsets.all(18),
@@ -662,7 +633,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 _prefNotificacoes,
                 (v) => setState(() => _prefNotificacoes = v),
               ),
-              const Divider(height: 18, color: Color(0xFFE2E8F0)),
+              const Divider(height: 18, color: AppColors.borderDim),
               _switchRow(
                 Icons.lock_outline_rounded,
                 'Privacidade',
@@ -675,20 +646,15 @@ class _PerfilScreenState extends State<PerfilScreen> {
         ),
       );
 
-  // ── CTA inferior ─────────────────────────────────────────────────
   Widget _ctaSeguranca() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          colors: [AppColors.primaryDeep, AppColors.bgMid],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.primary,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.25),
+            color: AppColors.primary.withOpacity(0.2),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),
@@ -702,11 +668,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: AppColors.bgBase.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.shield_outlined,
-                  color: Colors.white, size: 24),
+                  color: AppColors.bgBase, size: 24),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -720,7 +686,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                       fontFamily: 'Poppins',
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      color: AppColors.bgBase,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -729,7 +695,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 11,
-                      color: Colors.white.withOpacity(0.80),
+                      color: AppColors.bgBase.withOpacity(0.9),
                       height: 1.4,
                     ),
                   ),
@@ -748,8 +714,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.primaryDeep,
+                backgroundColor: AppColors.bgBase,
+                foregroundColor: AppColors.primary,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -771,9 +737,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────
   Widget _cardTitle(IconData icon, String title) => Row(children: [
-        Icon(icon, size: 18, color: AppColors.bgMid),
+        Icon(icon, size: 18, color: AppColors.primary),
         const SizedBox(width: 8),
         Expanded(
           child: Text(title,
@@ -782,13 +747,12 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   fontFamily: 'Poppins',
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.bgBase)),
+                  color: AppColors.textPrimary)),
         ),
       ]);
 
   Widget _infoRow(IconData icon, String label, String valor,
-      {Color accent = AppColors.bgMid}) {
-    final loading = _loading && valor == '—';
+      {Color accent = AppColors.primary}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -797,7 +761,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.08),
+              color: accent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 17, color: accent),
@@ -813,31 +777,21 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 11,
-                    color: Color(0xFF64748B),
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 1),
-                loading
-                    ? Container(
-                        height: 12,
-                        width: 90,
-                        margin: const EdgeInsets.only(top: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      )
-                    : Text(
-                        valor,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.bgBase,
-                        ),
-                      ),
+                Text(
+                  valor,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -855,10 +809,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: AppColors.bgMid.withOpacity(0.08),
+            color: AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 17, color: AppColors.bgMid),
+          child: Icon(icon, size: 17, color: AppColors.primary),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -872,30 +826,27 @@ class _PerfilScreenState extends State<PerfilScreen> {
                       fontFamily: 'Poppins',
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.bgBase)),
+                      color: AppColors.textPrimary)),
               Text(subtitulo,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 11,
-                      color: Color(0xFF64748B))),
+                      color: AppColors.textSecondary)),
             ],
           ),
         ),
         Switch(
           value: value,
           onChanged: onChanged,
-          activeThumbColor: AppColors.primaryDeep,
+          activeColor: AppColors.primary,
         ),
       ]),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
-//  CARD BASE
-// ─────────────────────────────────────────────────────────────────
 class _Card extends StatelessWidget {
   final Widget child;
   const _Card({required this.child});
@@ -904,12 +855,12 @@ class _Card extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.bgBase,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.borderDim),
         boxShadow: const [
           BoxShadow(
-              color: Color(0x08000000), blurRadius: 8, offset: Offset(0, 2)),
+              color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 4)),
         ],
       ),
       child: child,
@@ -917,9 +868,6 @@ class _Card extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  RESULT TYPES
-// ═══════════════════════════════════════════════════════════════════
 class _PerfilFormResult {
   final String nome, cpf, telefone, dataNascimento;
   final String tipoSanguineo, alergias, convenio;
@@ -943,25 +891,8 @@ class _EmergenciaFormResult {
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  PERFIL — BOTTOM SHEET DE EDIÇÃO
-// ═══════════════════════════════════════════════════════════════════
 class _PerfilEditSheet extends StatefulWidget {
-  final String nomeAtual;
-  final String emailAtual;
-  final String cpf, telefone, dataNascimento;
-  final String tipoSanguineo, alergias, convenio;
-
-  const _PerfilEditSheet({
-    required this.nomeAtual,
-    required this.emailAtual,
-    required this.cpf,
-    required this.telefone,
-    required this.dataNascimento,
-    required this.tipoSanguineo,
-    required this.alergias,
-    required this.convenio,
-  });
+  const _PerfilEditSheet();
 
   @override
   State<_PerfilEditSheet> createState() => _PerfilEditSheetState();
@@ -969,22 +900,49 @@ class _PerfilEditSheet extends StatefulWidget {
 
 class _PerfilEditSheetState extends State<_PerfilEditSheet> {
   final _formKey = GlobalKey<FormState>();
-  late final _nomeCtrl = TextEditingController(text: widget.nomeAtual);
-  late final _cpfCtrl =
-      TextEditingController(text: widget.cpf == '—' ? '' : widget.cpf);
-  late final _telCtrl = TextEditingController(
-      text: widget.telefone == '—' ? '' : widget.telefone);
-  late final _nascCtrl = TextEditingController(
-      text: widget.dataNascimento == '—' ? '' : widget.dataNascimento);
-  late final _alergCtrl = TextEditingController(
-      text: widget.alergias == 'Nenhuma registrada' ? '' : widget.alergias);
-  late final _convCtrl =
-      TextEditingController(text: widget.convenio == 'SUS' ? '' : widget.convenio);
+  final _firestore = FirebaseFirestore.instance;
+  late final TextEditingController _nomeCtrl;
+  late final TextEditingController _cpfCtrl;
+  late final TextEditingController _telCtrl;
+  late final TextEditingController _nascCtrl;
+  late final TextEditingController _alergCtrl;
+  late final TextEditingController _convCtrl;
+  String _tipoSang = '';
 
-  late String _tipoSang =
-      widget.tipoSanguineo == '—' ? '' : widget.tipoSanguineo;
+  bool _loading = true;
 
-  static const _sangues = ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  @override
+  void initState() {
+    super.initState();
+    _nomeCtrl = TextEditingController();
+    _cpfCtrl = TextEditingController();
+    _telCtrl = TextEditingController();
+    _nascCtrl = TextEditingController();
+    _alergCtrl = TextEditingController();
+    _convCtrl = TextEditingController();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    final u = FirebaseAuth.instance.currentUser;
+    if (u == null) return;
+    _nomeCtrl.text = u.displayName ?? '';
+    try {
+      final snap = await _firestore.collection('usuarios').doc(u.uid).get();
+      if (snap.exists) {
+        final d = snap.data()!;
+        _cpfCtrl.text = (d['cpf'] ?? '') as String;
+        _telCtrl.text = (d['telefone'] ?? '') as String;
+        _nascCtrl.text = (d['dataNascimento'] ?? '') as String;
+        _alergCtrl.text = (d['alergias'] ?? '') as String;
+        _convCtrl.text = (d['convenio'] ?? '') as String;
+        _tipoSang = (d['tipoSanguineo'] ?? '') as String;
+      }
+    } catch (e) {
+      debugPrint('Erro: $e');
+    }
+    if (mounted) setState(() => _loading = false);
+  }
 
   @override
   void dispose() {
@@ -1021,7 +979,7 @@ class _PerfilEditSheetState extends State<_PerfilEditSheet> {
         constraints: BoxConstraints(maxHeight: maxH),
         child: Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFF4F7FB),
+            color: AppColors.bgBase,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
@@ -1033,82 +991,81 @@ class _PerfilEditSheetState extends State<_PerfilEditSheet> {
                 subtitulo: 'Atualize seus dados pessoais e de saúde.',
                 onClose: () => Navigator.of(context).pop(),
               ),
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const _SectionHeader(
-                            icon: Icons.badge_outlined,
-                            titulo: 'Dados pessoais'),
-                        _Field(
-                          controller: _nomeCtrl,
-                          label: 'Nome completo',
-                          icon: Icons.person_outline_rounded,
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Informe seu nome'
-                              : null,
-                        ),
-                        _Field(
-                          label: 'E-mail',
-                          icon: Icons.email_outlined,
-                          enabled: false,
-                          initialText: widget.emailAtual,
-                          helper: 'O e-mail não pode ser alterado aqui.',
-                        ),
-                        _Field(
-                          controller: _cpfCtrl,
-                          label: 'CPF',
-                          icon: Icons.fingerprint_rounded,
-                          keyboardType: TextInputType.number,
-                          hint: '000.000.000-00',
-                        ),
-                        _Field(
-                          controller: _telCtrl,
-                          label: 'Telefone',
-                          icon: Icons.phone_outlined,
-                          keyboardType: TextInputType.phone,
-                          hint: '(86) 9 9999-9999',
-                        ),
-                        _Field(
-                          controller: _nascCtrl,
-                          label: 'Data de nascimento',
-                          icon: Icons.cake_outlined,
-                          hint: 'DD/MM/AAAA',
-                        ),
-                        const SizedBox(height: 8),
-                        const _SectionHeader(
-                            icon: Icons.favorite_border_rounded,
-                            titulo: 'Saúde'),
-                        _Dropdown(
-                          label: 'Tipo sanguíneo',
-                          icon: Icons.bloodtype_outlined,
-                          value: _tipoSang,
-                          items: _sangues,
-                          onChanged: (v) =>
-                              setState(() => _tipoSang = v ?? ''),
-                        ),
-                        _Field(
-                          controller: _alergCtrl,
-                          label: 'Alergias',
-                          icon: Icons.warning_amber_rounded,
-                          hint: 'Ex.: Dipirona, amendoim',
-                          maxLines: 2,
-                        ),
-                        _Field(
-                          controller: _convCtrl,
-                          label: 'Convênio',
-                          icon: Icons.medical_information_outlined,
-                          hint: 'SUS, Unimed, etc.',
-                        ),
-                      ],
+              if (_loading)
+                const Padding(
+                  padding: EdgeInsets.all(40),
+                  child: CircularProgressIndicator(),
+                )
+              else
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const _SectionHeader(
+                              icon: Icons.badge_outlined,
+                              titulo: 'Dados pessoais'),
+                          _Field(
+                            controller: _nomeCtrl,
+                            label: 'Nome completo',
+                            icon: Icons.person_outline_rounded,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Informe seu nome'
+                                : null,
+                          ),
+                          _Field(
+                            controller: _cpfCtrl,
+                            label: 'CPF',
+                            icon: Icons.fingerprint_rounded,
+                            keyboardType: TextInputType.number,
+                            hint: '000.000.000-00',
+                          ),
+                          _Field(
+                            controller: _telCtrl,
+                            label: 'Telefone',
+                            icon: Icons.phone_outlined,
+                            keyboardType: TextInputType.phone,
+                            hint: '(86) 9 9999-9999',
+                          ),
+                          _Field(
+                            controller: _nascCtrl,
+                            label: 'Data de nascimento',
+                            icon: Icons.cake_outlined,
+                            hint: 'DD/MM/AAAA',
+                          ),
+                          const SizedBox(height: 8),
+                          const _SectionHeader(
+                              icon: Icons.favorite_border_rounded,
+                              titulo: 'Saúde'),
+                          _Dropdown(
+                            label: 'Tipo sanguíneo',
+                            icon: Icons.bloodtype_outlined,
+                            value: _tipoSang,
+                            items: const ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+                            onChanged: (v) =>
+                                setState(() => _tipoSang = v ?? ''),
+                          ),
+                          _Field(
+                            controller: _alergCtrl,
+                            label: 'Alergias',
+                            icon: Icons.warning_amber_rounded,
+                            hint: 'Ex.: Dipirona, amendoim',
+                            maxLines: 2,
+                          ),
+                          _Field(
+                            controller: _convCtrl,
+                            label: 'Convênio',
+                            icon: Icons.medical_information_outlined,
+                            hint: 'SUS, Unimed, etc.',
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
               _SheetActions(onCancel: () => Navigator.of(context).pop(), onSave: _submit),
             ],
           ),
@@ -1118,9 +1075,6 @@ class _PerfilEditSheetState extends State<_PerfilEditSheet> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  EMERGÊNCIA — BOTTOM SHEET
-// ═══════════════════════════════════════════════════════════════════
 class _EmergenciaEditSheet extends StatefulWidget {
   final String nome, parentesco, fone;
   const _EmergenciaEditSheet({
@@ -1164,7 +1118,7 @@ class _EmergenciaEditSheetState extends State<_EmergenciaEditSheet> {
       padding: EdgeInsets.only(bottom: keyboard),
       child: Container(
         decoration: const BoxDecoration(
-          color: Color(0xFFF4F7FB),
+          color: AppColors.bgBase,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -1221,9 +1175,6 @@ class _EmergenciaEditSheetState extends State<_EmergenciaEditSheet> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  COMPONENTES DOS SHEETS
-// ═══════════════════════════════════════════════════════════════════
 class _SheetHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
@@ -1232,7 +1183,7 @@ class _SheetHandle extends StatelessWidget {
           width: 42,
           height: 4,
           decoration: BoxDecoration(
-            color: const Color(0xFFCBD5E1),
+            color: AppColors.borderDim,
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -1265,7 +1216,7 @@ class _SheetHeader extends StatelessWidget {
                     fontFamily: 'Poppins',
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.bgBase,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1274,7 +1225,7 @@ class _SheetHeader extends StatelessWidget {
                   style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 12,
-                    color: Color(0xFF64748B),
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -1283,7 +1234,7 @@ class _SheetHeader extends StatelessWidget {
           IconButton(
             onPressed: onClose,
             icon: const Icon(Icons.close_rounded,
-                color: Color(0xFF64748B), size: 22),
+                color: AppColors.textTertiary, size: 22),
           ),
         ],
       ),
@@ -1299,8 +1250,8 @@ class _SheetActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+        color: AppColors.bgBase,
+        border: Border(top: BorderSide(color: AppColors.borderDim)),
       ),
       padding: EdgeInsets.fromLTRB(
           16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
@@ -1310,8 +1261,8 @@ class _SheetActions extends StatelessWidget {
             child: OutlinedButton(
               onPressed: onCancel,
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF64748B),
-                side: const BorderSide(color: Color(0xFFE2E8F0)),
+                foregroundColor: AppColors.textSecondary,
+                side: const BorderSide(color: AppColors.borderDim),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -1342,7 +1293,7 @@ class _SheetActions extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryDeep,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1369,7 +1320,7 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(top: 6, bottom: 8, left: 4),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.bgMid),
+          Icon(icon, size: 16, color: AppColors.primary),
           const SizedBox(width: 6),
           Text(
             titulo,
@@ -1378,7 +1329,7 @@ class _SectionHeader extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.4,
-              color: AppColors.bgMid,
+              color: AppColors.primary,
             ),
           ),
         ],
@@ -1423,46 +1374,46 @@ class _Field extends StatelessWidget {
         keyboardType: keyboardType,
         maxLines: maxLines,
         validator: validator,
-        style: TextStyle(
+        style: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 13,
-          color: enabled ? AppColors.bgBase : const Color(0xFF94A3B8),
+          color: AppColors.textPrimary,
         ),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
           helperText: helper,
-          prefixIcon: Icon(icon, size: 18, color: AppColors.bgMid),
+          prefixIcon: Icon(icon, size: 18, color: AppColors.primary),
           isDense: true,
           filled: true,
-          fillColor: enabled ? Colors.white : const Color(0xFFF1F5F9),
+          fillColor: AppColors.bgBase,
           labelStyle: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 12,
-            color: Color(0xFF64748B),
+            color: AppColors.textSecondary,
           ),
           hintStyle: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 12,
-            color: Color(0xFF94A3B8),
+            color: AppColors.textTertiary,
           ),
           helperStyle: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 10,
-            color: Color(0xFF94A3B8),
+            color: AppColors.textTertiary,
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: const BorderSide(color: AppColors.borderDim),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: const BorderSide(color: AppColors.borderDim),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide:
-                const BorderSide(color: AppColors.primaryDeep, width: 1.4),
+                const BorderSide(color: AppColors.primary, width: 1.4),
           ),
         ),
       ),
@@ -1490,17 +1441,16 @@ class _Dropdown extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: DropdownButtonFormField<String>(
-        initialValue: items.contains(value) ? value : '',
-        // ✅ Fundo BRANCO no menu suspenso — sem contaminação do tema escuro
-        dropdownColor: Colors.white,
+        value: items.contains(value) ? value : '',
+        dropdownColor: AppColors.bgBase,
         elevation: 4,
         borderRadius: BorderRadius.circular(12),
         icon: const Icon(Icons.keyboard_arrow_down_rounded,
-            color: Color(0xFF64748B)),
+            color: AppColors.textSecondary),
         style: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 13,
-          color: AppColors.bgBase,
+          color: AppColors.textPrimary,
         ),
         items: items
             .map((s) => DropdownMenuItem(
@@ -1513,8 +1463,8 @@ class _Dropdown extends StatelessWidget {
                       fontWeight:
                           s.isEmpty ? FontWeight.w500 : FontWeight.w600,
                       color: s.isEmpty
-                          ? const Color(0xFF94A3B8)
-                          : AppColors.bgBase,
+                          ? AppColors.textTertiary
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ))
@@ -1522,27 +1472,27 @@ class _Dropdown extends StatelessWidget {
         onChanged: onChanged,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, size: 18, color: AppColors.bgMid),
+          prefixIcon: Icon(icon, size: 18, color: AppColors.primary),
           isDense: true,
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppColors.bgBase,
           labelStyle: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 12,
-            color: Color(0xFF64748B),
+            color: AppColors.textSecondary,
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: const BorderSide(color: AppColors.borderDim),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            borderSide: const BorderSide(color: AppColors.borderDim),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide:
-                const BorderSide(color: AppColors.primaryDeep, width: 1.4),
+                const BorderSide(color: AppColors.primary, width: 1.4),
           ),
         ),
       ),

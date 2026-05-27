@@ -1,13 +1,4 @@
-// TODO Implement this library.
 import 'package:conecta_saude_pi/features/posto/posto_emergencia_screen.dart';
-import 'package:flutter/material.dart';
-import '../../core/theme/app_theme.dart';
-
-// ─────────────────────────────────────────────────────────────
-//  PostoAusenciaScreen — Gestão de ausências/faltas de pacientes
-//  Permite registrar ausência e reconvocar pacientes
-//  TODO: conectar Firestore collection 'ausencias'
-// ─────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../widgets/app_header.dart';
@@ -111,7 +102,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
           role: UserRole.posto,
         ),
       ),
-      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Container(width: 1, color: AppColors.borderDim),
       Expanded(
         child: Column(children: [
           AppHeader(
@@ -169,14 +160,8 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF5C2A2A).withOpacity(0.3),
-            const Color(0xFF0F1B3D),
-          ],
-        ),
+        gradient: AppColors.primaryGradient,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF5C2A2A).withOpacity(0.4)),
       ),
       child: Row(
         children: [
@@ -184,12 +169,12 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: const Color(0xFFEF5350).withOpacity(0.15),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Center(
               child: Icon(Icons.person_off_rounded,
-                  color: Color(0xFFEF5350), size: 26),
+                  color: Colors.white, size: 26),
             ),
           ),
           const SizedBox(width: 16),
@@ -209,7 +194,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 11,
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ],
@@ -224,17 +209,17 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
     return Row(
       children: [
         Text(title,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withOpacity(0.7),
+              color: AppColors.textPrimary,
             )),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
           decoration: BoxDecoration(
-            color: AppColors.blue.withOpacity(0.3),
+            color: AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text('$count',
@@ -242,7 +227,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
                 fontFamily: 'Poppins',
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: AppColors.blueLt,
+                color: AppColors.primary,
               )),
         ),
       ],
@@ -254,9 +239,9 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1B3D),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1E3A6E)),
+        border: Border.all(color: AppColors.borderDim),
       ),
       child: Row(
         children: [
@@ -271,7 +256,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEF5350).withOpacity(0.15),
+                        color: AppColors.error.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(aus.senha,
@@ -279,7 +264,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
                             fontFamily: 'Poppins',
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFFEF5350),
+                            color: AppColors.error,
                           )),
                     ),
                     const SizedBox(width: 10),
@@ -288,8 +273,8 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
                           style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
                           ),
                           overflow: TextOverflow.ellipsis),
                     ),
@@ -299,24 +284,24 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
                 Row(
                   children: [
                     Text(aus.especialidade,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
-                          color: Colors.white.withOpacity(0.4),
+                          color: AppColors.textSecondary,
                         )),
                     const SizedBox(width: 8),
                     Text('Chamado: ${aus.horaChamada}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
-                          color: Colors.white.withOpacity(0.3),
+                          color: AppColors.textTertiary,
                         )),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: AppColors.surfaceDim,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text('${aus.chamadas}/3 chamadas',
@@ -324,8 +309,8 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
                             fontFamily: 'Poppins',
                             fontSize: 9,
                             color: aus.chamadas >= 3
-                                ? const Color(0xFFEF5350)
-                                : const Color(0xFFFFA726),
+                                ? AppColors.error
+                                : AppColors.warning,
                           )),
                     ),
                   ],
@@ -339,23 +324,23 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
             Column(
               children: [
                 _actionBtn(
-                    'Reconvocar', Icons.campaign_rounded, AppColors.greenLt,
+                    'Reconvocar', Icons.campaign_rounded, AppColors.success,
                     () {
                   setState(() => aus.chamadas++);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Reconvocando ${aus.nome}...'),
-                      backgroundColor: const Color(0xFF1A3A6B),
+                      backgroundColor: AppColors.primary,
                     ),
                   );
                 }),
                 const SizedBox(height: 6),
                 _actionBtn('Fim da fila', Icons.low_priority_rounded,
-                    const Color(0xFFFFA726), () {
+                    AppColors.warning, () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('${aus.nome} movido para o fim da fila'),
-                      backgroundColor: const Color(0xFF1A3A6B),
+                      backgroundColor: AppColors.primary,
                     ),
                   );
                 }),
@@ -365,7 +350,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFFEF5350).withOpacity(0.1),
+                color: AppColors.error.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text('Perdeu a vez',
@@ -373,7 +358,7 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
                     fontFamily: 'Poppins',
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFEF5350),
+                    color: AppColors.error,
                   )),
             ),
           ],
@@ -389,8 +374,9 @@ class _PostoAusenciaScreenState extends State<PostoAusenciaScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: cor.withOpacity(0.12),
+          color: cor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: cor.withOpacity(0.2)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -34,13 +34,13 @@ class AppHeader extends StatelessWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.bgMid, AppColors.bgBase],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [Color(0xFF0D2B6B), AppColors.primaryDeep],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
         boxShadow: [
           BoxShadow(
-              color: Color(0x1A000000), blurRadius: 8, offset: Offset(0, 2)),
+              color: Color(0x33000000), blurRadius: 10, offset: Offset(0, 3)),
         ],
       ),
       child: SafeArea(
@@ -131,15 +131,11 @@ class AppHeader extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1A3A8F), AppColors.primaryDeep],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: Colors.white.withOpacity(0.15),
               boxShadow: [
                 BoxShadow(
-                    color: AppColors.primary.withOpacity(0.30),
-                    blurRadius: 10),
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4),
               ],
             ),
             child: ClipRRect(
@@ -161,34 +157,24 @@ class AppHeader extends StatelessWidget {
                     fontFamily: 'Poppins',
                     fontSize: 11,
                     fontWeight: FontWeight.w300,
-                    color: Colors.white,
+                    color: Colors.white70,
                     height: 1.1),
               ),
-              TextSpan(
+              const TextSpan(
                 text: 'Saúde',
                 style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.blueLt,
-                    shadows: [
-                      Shadow(
-                          color: AppColors.blueLt.withOpacity(0.5),
-                          blurRadius: 8)
-                    ]),
+                    color: Colors.white),
               ),
-              TextSpan(
+              const TextSpan(
                 text: 'PI',
                 style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.greenLt,
-                    shadows: [
-                      Shadow(
-                          color: AppColors.greenLt.withOpacity(0.5),
-                          blurRadius: 8)
-                    ]),
+                    color: AppColors.accent),
               ),
             ]),
           ),
@@ -201,7 +187,7 @@ class AppHeader extends StatelessWidget {
 
   return CircleAvatar(
     radius: 18,
-    backgroundColor: AppColors.primaryDeep,
+    backgroundColor: Colors.white.withOpacity(0.2),
     
     // Tentamos carregar a imagem da rede se a URL for válida
     backgroundImage: hasValidPhoto ? NetworkImage(userPhoto!) : null,
@@ -240,7 +226,7 @@ class _IconBtn extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Material(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withOpacity(0.12),
             borderRadius: BorderRadius.circular(10),
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
@@ -259,7 +245,7 @@ class _IconBtn extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(3),
                 decoration: const BoxDecoration(
-                    color: AppColors.primaryDeep, shape: BoxShape.circle),
+                    color: AppColors.accent, shape: BoxShape.circle),
                 child: Text('$badge',
                     style: const TextStyle(
                         color: Colors.white,

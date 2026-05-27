@@ -45,8 +45,7 @@ class LoginAdminScreen extends StatefulWidget {
   State<LoginAdminScreen> createState() => _LoginAdminScreenState();
 }
 
-class _LoginAdminScreenState extends State<LoginAdminScreen>
-    with SingleTickerProviderStateMixin {
+class _LoginAdminScreenState extends State<LoginAdminScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usuarioCtrl = TextEditingController(); // Usuário ou e-mail completo
   final _senhaCtrl = TextEditingController();
@@ -55,22 +54,11 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
   bool _loading = false;
   String? _erro;
 
-  late final AnimationController _entryCtrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 700),
-  );
-
   // ── Lifecycle ──────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
     _checkAlreadyLoggedIn();
-
-    // FIX: aguarda a transição da rota (AppHeroFadeRoute = 700ms) terminar
-    // antes de animar os elementos internos — evita dupla animação visível.
-    Future.delayed(const Duration(milliseconds: 650), () {
-      if (mounted) _entryCtrl.forward();
-    });
   }
 
   Future<void> _checkAlreadyLoggedIn() async {
@@ -91,38 +79,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
   void dispose() {
     _usuarioCtrl.dispose();
     _senhaCtrl.dispose();
-    _entryCtrl.dispose();
     super.dispose();
-  }
-
-  // ── Stagger helper ─────────────────────────────────────────────
-  Widget _s(int i, Widget child) {
-    final fade = CurvedAnimation(
-      parent: _entryCtrl,
-      curve: Interval(
-        (i * 0.15).clamp(0.0, 0.5),
-        ((i * 0.15) + 0.55).clamp(0.0, 1.0),
-        curve: Curves.easeOut,
-      ),
-    );
-    final slide = Tween(begin: 18.0, end: 0.0).animate(CurvedAnimation(
-      parent: _entryCtrl,
-      curve: Interval(
-        (i * 0.15).clamp(0.0, 0.5),
-        ((i * 0.15) + 0.55).clamp(0.0, 1.0),
-        curve: Curves.easeOutCubic,
-      ),
-    ));
-    return AnimatedBuilder(
-      animation: _entryCtrl,
-      builder: (_, __) => Opacity(
-        opacity: fade.value,
-        child: Transform.translate(
-          offset: Offset(0, slide.value),
-          child: child,
-        ),
-      ),
-    );
   }
 
   // ── Verificação de perfil admin/posto no Firestore ────────────────
@@ -231,107 +188,77 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.navyDeep,
-      body: Stack(children: [
-        // Fundo — mais sóbrio que o cidadão (sem orbs coloridos)
-        _buildFundo(),
+      key: _formKey,
+      backgroundColor: AppColors.bgBase,
+      body: AppBackground(
+        child: SafeArea(
+          child: Stack(children: [
+            // Linha topo
+            const Positioned(top: 0, left: 0, right: 0, child: AppTopLine()),
 
-        // Linha topo
-        const Positioned(top: 0, left: 0, right: 0, child: AppTopLine()),
+            // Conteúdo centralizado
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 56),
 
-        // Conteúdo centralizado
-        SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 56),
+                        // ── Ícone de cadeado + identidade ───────────
+                        AppEntrance(
+                            delay: const Duration(milliseconds: 100),
+                            child: _buildIdentidade()),
+                        const SizedBox(height: 36),
 
-                      // ── Ícone de cadeado + identidade ───────────
-                      _s(0, _buildIdentidade()),
-                      const SizedBox(height: 36),
+                        // ── Título ──────────────────────────────────
+                        AppEntrance(
+                            delay: const Duration(milliseconds: 200),
+                            child: _buildTitulo()),
+                        const SizedBox(height: 28),
 
-                      // ── Título ──────────────────────────────────
-                      _s(1, _buildTitulo()),
-                      const SizedBox(height: 28),
+                        // ── Erro ────────────────────────────────────
+                        if (_erro != null) ...[
+                          AppEntrance(child: _buildErroBox()),
+                          const SizedBox(height: 12),
+                        ],
 
-                      // ── Erro ────────────────────────────────────
-                      if (_erro != null) ...[
-                        _s(1, _buildErroBox()),
-                        const SizedBox(height: 12),
+                        // ── Campo: usuário (Username) ───────────────
+                        AppEntrance(
+                            delay: const Duration(milliseconds: 300),
+                            child: _buildCampoUsuario()),
+                        const SizedBox(height: 14),
+
+                        // ── Campo: senha ────────────────────────────
+                        AppEntrance(
+                            delay: const Duration(milliseconds: 400),
+                            child: _buildCampoSenha()),
+                        const SizedBox(height: 28),
+
+                        // ── Botão entrar ────────────────────────────
+                        AppEntrance(
+                            delay: const Duration(milliseconds: 500),
+                            child: _buildBotaoEntrar()),
+                        const SizedBox(height: 32),
+
+                        // ── Rodapé ──────────────────────────────────
+                        AppEntrance(
+                            delay: const Duration(milliseconds: 600),
+                            child: _buildRodape()),
+                        const SizedBox(height: 40),
                       ],
-
-                      // ── Campo: usuário (Username) ───────────────
-                      _s(2, _buildCampoUsuario()),
-                      const SizedBox(height: 14),
-
-                      // ── Campo: senha ────────────────────────────
-                      _s(2, _buildCampoSenha()),
-                      const SizedBox(height: 28),
-
-                      // ── Botão entrar ────────────────────────────
-                      _s(3, _buildBotaoEntrar()),
-                      const SizedBox(height: 32),
-
-                      // ── Rodapé ──────────────────────────────────
-                      _s(4, _buildRodape()),
-                      const SizedBox(height: 40),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ]),
         ),
-      ]),
-    );
-  }
-
-  // ── Fundo sóbrio (mais escuro, menos orbs) ─────────────────────
-  Widget _buildFundo() {
-    return Positioned.fill(
-      child: Stack(children: [
-        // Gradiente mais fechado — aspecto corporativo
-        Container(
-          decoration: const BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(0, -0.6),
-              radius: 1.2,
-              colors: [Color(0xFF0A1B4A), AppColors.bgBase],
-            ),
-          ),
-        ),
-        // Linhas de grade sutis (aspecto de painel de sistema)
-        Positioned.fill(
-          child: Opacity(
-            opacity: 0.03,
-            child: CustomPaint(painter: _GridPainter()),
-          ),
-        ),
-        // Pontinho de luz no topo — discreto
-        Positioned(
-          top: -120,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: 300,
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                colors: [
-                  AppColors.primary.withOpacity(0.08),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-      ]),
+      ),
     );
   }
 
@@ -341,7 +268,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         // Logo Centralizada com Hero
-        const AppBrandLogo(size: 72, showText: true),
+        const AppBrandLogo(size: 72, showText: true, isLight: true),
 
         const SizedBox(height: 16),
 
@@ -350,12 +277,12 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.primary.withOpacity(0.20)),
-            color: AppColors.primary.withOpacity(0.06),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            color: Colors.white.withOpacity(0.08),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(Icons.shield_outlined,
-                size: 11, color: AppColors.primary.withOpacity(0.7)),
+                size: 11, color: Colors.white.withOpacity(0.8)),
             const SizedBox(width: 5),
             Text(
               'PAINEL ADMINISTRATIVO',
@@ -363,7 +290,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
                   fontFamily: 'Poppins',
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.primary.withOpacity(0.7),
+                  color: Colors.white.withOpacity(0.8),
                   letterSpacing: 1.6),
             ),
           ]),
@@ -373,22 +300,20 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
   }
 
   // ── Título ─────────────────────────────────────────────────────
-  Widget _buildTitulo() => Column(
+  Widget _buildTitulo() => const Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text('Acesso restrito',
+          Text('Acesso restrito',
               style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: Colors.white)),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text('Informe seu usuário e senha para continuar',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 13,
-                  color: Colors.white.withOpacity(0.45))),
+                  fontFamily: 'Poppins', fontSize: 13, color: Colors.white70)),
         ],
       );
 
@@ -418,103 +343,101 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
 
   // ── Campo Usuário (Username) ────────────────────────────────────
   Widget _buildCampoUsuario() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Usuário',
-            style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.white.withOpacity(0.45),
-                letterSpacing: 1.0)),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: _usuarioCtrl,
-          keyboardType: TextInputType.text,
-          textInputAction: TextInputAction.next,
-          autocorrect: false,
-          enableSuggestions: false,
-          style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14,
-              color: Colors.white,
-              fontWeight: FontWeight.w500),
-          decoration: const InputDecoration(
-            hintText: 'Digite seu nome de usuário',
-            prefixIcon: Icon(Icons.person_outline_rounded,
-                color: AppColors.textTertiary, size: 19),
-          ),
-          validator: (v) {
-            if (v == null || v.trim().isEmpty) return 'Informe seu usuário';
-
-            final raw = v.trim();
-            if (raw.contains(' ')) return 'O usuário não pode conter espaços';
-
-            // Se for e-mail completo (contém @), valida formato básico
-            if (raw.contains('@')) {
-              if (!raw.contains('.') || raw.length < 5) {
-                return 'E-mail inválido';
-              }
-            } else {
-              // Se for só username, valida caracteres permitidos (letras, números, _)
-              final usernameRegex = RegExp(r'^[a-zA-Z0-9_]+$');
-              if (!usernameRegex.hasMatch(raw)) {
-                return 'Use apenas letras, números ou underscore (_)';
-              }
-            }
-            return null;
-          },
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: TextFormField(
+        controller: _usuarioCtrl,
+        keyboardType: TextInputType.text,
+        textInputAction: TextInputAction.next,
+        autocorrect: false,
+        enableSuggestions: false,
+        style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: Colors.white,
+            fontWeight: FontWeight.w500),
+        decoration: InputDecoration(
+          hintText: 'Usuário ou e-mail',
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+          fillColor: Colors.transparent,
+          filled: true,
+          prefixIcon: const Icon(Icons.person_outline_rounded,
+              color: Colors.white70, size: 19),
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
         ),
-      ],
+        validator: (v) {
+          if (v == null || v.trim().isEmpty) return 'Informe seu usuário';
+
+          final raw = v.trim();
+          if (raw.contains(' ')) return 'O usuário não pode conter espaços';
+
+          // Se for e-mail completo (contém @), valida formato básico
+          if (raw.contains('@')) {
+            if (!raw.contains('.') || raw.length < 5) {
+              return 'E-mail inválido';
+            }
+          } else {
+            // Se for só username, valida caracteres permitidos (letras, números, _)
+            final usernameRegex = RegExp(r'^[a-zA-Z0-9_]+$');
+            if (!usernameRegex.hasMatch(raw)) {
+              return 'Use apenas letras, números ou underscore (_)';
+            }
+          }
+          return null;
+        },
+      ),
     );
   }
 
   // ── Campo Senha ─────────────────────────────────────────────────
   Widget _buildCampoSenha() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Senha',
-            style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.white.withOpacity(0.45),
-                letterSpacing: 1.0)),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: _senhaCtrl,
-          obscureText: !_senhaVis,
-          textInputAction: TextInputAction.done,
-          onFieldSubmitted: (_) => _entrar(),
-          style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14,
-              color: Colors.white,
-              fontWeight: FontWeight.w500),
-          decoration: InputDecoration(
-            hintText: '••••••••',
-            prefixIcon: const Icon(Icons.lock_outline_rounded,
-                color: AppColors.textTertiary, size: 19),
-            suffixIcon: IconButton(
-              onPressed: () => setState(() => _senhaVis = !_senhaVis),
-              icon: Icon(
-                _senhaVis
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                color: AppColors.textTertiary,
-                size: 19,
-              ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: TextFormField(
+        controller: _senhaCtrl,
+        obscureText: !_senhaVis,
+        textInputAction: TextInputAction.done,
+        onFieldSubmitted: (_) => _entrar(),
+        style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: Colors.white,
+            fontWeight: FontWeight.w500),
+        decoration: InputDecoration(
+          hintText: 'Sua senha de acesso',
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+          fillColor: Colors.transparent,
+          filled: true,
+          prefixIcon: const Icon(Icons.lock_outline_rounded,
+              color: Colors.white70, size: 19),
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          suffixIcon: IconButton(
+            onPressed: () => setState(() => _senhaVis = !_senhaVis),
+            icon: Icon(
+              _senhaVis
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              color: Colors.white70,
+              size: 19,
             ),
           ),
-          validator: (v) {
-            if (v == null || v.isEmpty) return 'Informe sua senha';
-            if (v.length < 6) return 'Senha mínima: 6 caracteres';
-            return null;
-          },
         ),
-      ],
+        validator: (v) {
+          if (v == null || v.isEmpty) return 'Informe sua senha';
+          if (v.length < 6) return 'Senha mínima: 6 caracteres';
+          return null;
+        },
+      ),
     );
   }
 
@@ -527,17 +450,17 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
             gradient: _loading
                 ? null
                 : const LinearGradient(
-                    colors: [AppColors.primaryDeep, Color(0xFF1A5CFF)],
+                    colors: [Color(0xFF1A72FF), Color(0xFF1AFFA4)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-            color: _loading ? AppColors.surfaceMid : null,
+            color: _loading ? Colors.white.withOpacity(0.1) : null,
             borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
             boxShadow: _loading
                 ? null
                 : [
                     BoxShadow(
-                        color: AppColors.primaryDeep.withOpacity(0.35),
+                        color: const Color(0xFF1A72FF).withValues(alpha: 0.25),
                         blurRadius: 20,
                         offset: const Offset(0, 6)),
                   ],
@@ -546,6 +469,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
             onPressed: _loading ? null : _entrar,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
               shadowColor: Colors.transparent,
               minimumSize:
                   const Size(double.infinity, AppDimensions.buttonHeight),
@@ -563,7 +487,10 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
                     size: 18, color: Colors.white),
             label: Text(
               _loading ? 'Autenticando...' : 'Acessar painel',
-              style: AppTextStyles.labelLarge,
+              style: AppTextStyles.labelLarge.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16),
             ),
           ),
         ),
@@ -574,30 +501,31 @@ class _LoginAdminScreenState extends State<LoginAdminScreen>
         children: [
           // Linha divisória
           Row(children: [
-            Expanded(child: Divider(color: Colors.white.withOpacity(0.07))),
+            const Expanded(child: Divider(color: Colors.white10)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text('ACESSO MONITORADO',
                   style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 8,
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withOpacity(0.4),
+                      fontWeight: FontWeight.w600,
                       letterSpacing: 2)),
             ),
-            Expanded(child: Divider(color: Colors.white.withOpacity(0.07))),
+            const Expanded(child: Divider(color: Colors.white10)),
           ]),
           const SizedBox(height: 12),
           // Aviso de acesso
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             Icon(Icons.info_outline_rounded,
-                size: 12, color: Colors.white.withOpacity(0.18)),
+                size: 12, color: Colors.white.withOpacity(0.4)),
             const SizedBox(width: 6),
             Text(
               'Acesso exclusivo para administradores autorizados',
               style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 10,
-                  color: Colors.white.withOpacity(0.18)),
+                  color: Colors.white.withOpacity(0.4)),
             ),
           ]),
         ],
@@ -611,7 +539,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.borderDim.withOpacity(0.5)
       ..strokeWidth = 0.5;
 
     const spacing = 40.0;

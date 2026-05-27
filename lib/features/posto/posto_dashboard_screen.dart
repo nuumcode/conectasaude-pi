@@ -20,16 +20,8 @@ class PostoDashboardScreen extends StatefulWidget {
 class _PostoDashboardScreenState extends State<PostoDashboardScreen>
     with SingleTickerProviderStateMixin {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  static const _bgMain = Color(0xFFF2F6FC);
-  static const _textDark = Color(0xFF1A2138);
-  static const _textMuted = Color(0xFF7B8794);
-  static const _dividerColor = Color(0xFFE8EEF5);
-  static const _cardShadow = Color(0x0D000000);
   
-  static const _blueAccent = Color(0xFF2563EB);
-  static const _greenAccent = Color(0xFF10B981);
-  static const _warningOrange = Color(0xFFFFA726);
-  static const _purpleAccent = Color(0xFF7C3AED);
+  static const _cardShadow = Color(0x0D000000);
 
   late AnimationController _animController;
   User? get _user => FirebaseAuth.instance.currentUser;
@@ -82,12 +74,11 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final screenW = mq.size.width;
-    final isSmall = screenW < 360;
     final isDesktop = screenW >= 700;
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: _bgMain,
+      backgroundColor: AppColors.bgBase,
       drawer: isDesktop
           ? null
           : AppDrawer(
@@ -99,11 +90,11 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
               onLogout: _logout,
               role: UserRole.posto,
             ),
-      body: isDesktop ? _buildDesktop(isSmall) : _buildMobile(isSmall),
+      body: isDesktop ? _buildDesktop() : _buildMobile(),
     );
   }
 
-  Widget _buildDesktop(bool isSmall) {
+  Widget _buildDesktop() {
     return Row(children: [
       SizedBox(
         width: 260,
@@ -118,7 +109,7 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
           role: UserRole.posto,
         ),
       ),
-      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Container(width: 1, color: AppColors.borderDim),
       Expanded(
         child: Column(children: [
           AppHeader(
@@ -129,13 +120,13 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
             onMenuPressed: null,
             onProfilePressed: () {},
           ),
-          Expanded(child: _buildScrollableContent(isSmall)),
+          Expanded(child: _buildScrollableContent()),
         ]),
       ),
     ]);
   }
 
-  Widget _buildMobile(bool isSmall) {
+  Widget _buildMobile() {
     return Column(children: [
       AppHeader(
         userName: _user?.displayName?.split(' ').first ?? 'Gestor',
@@ -145,27 +136,27 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
         onProfilePressed: () {},
       ),
-      Expanded(child: _buildScrollableContent(isSmall)),
+      Expanded(child: _buildScrollableContent()),
     ]);
   }
 
-  Widget _buildScrollableContent(bool isSmall) {
+  Widget _buildScrollableContent() {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildWelcomeBanner(isSmall),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: isSmall ? 16 : 20),
+          _buildWelcomeBanner(),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: isSmall ? 20 : 24),
-                _buildActionGrid(isSmall),
-                SizedBox(height: isSmall ? 24 : 28),
-                _buildRecentActivity(isSmall),
-                const SizedBox(height: 100),
+                SizedBox(height: 24),
+                _ActionGrid(),
+                SizedBox(height: 28),
+                _RecentActivity(),
+                SizedBox(height: 100),
               ],
             ),
           ),
@@ -174,16 +165,12 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
     );
   }
 
-  Widget _buildWelcomeBanner(bool isSmall) {
+  Widget _buildWelcomeBanner() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(isSmall ? 16 : 20, 20, isSmall ? 16 : 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.bgMid, AppColors.bgBase],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
+        gradient: AppColors.primaryGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
@@ -192,38 +179,27 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
       child: Row(
         children: [
           Container(
-            width: isSmall ? 52 : 60,
-            height: isSmall ? 52 : 60,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFF10B981), Color(0xFF059669)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: Colors.white.withOpacity(0.2),
               border: Border.all(
-                color: Colors.white.withOpacity(0.25),
-                width: 2.5,
+                color: Colors.white.withOpacity(0.3),
+                width: 2,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.green.withOpacity(0.4),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
             child: const Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 28),
           ),
-          SizedBox(width: isSmall ? 14 : 18),
+          const SizedBox(width: 18),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Bem-vindo, ${_user?.displayName ?? 'Gestor'}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: isSmall ? 17 : 19,
+                      fontSize: 19,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                       height: 1.2,
@@ -232,9 +208,9 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
                 Text('Operação do Posto de Saúde',
                     style: TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: isSmall ? 11 : 12,
+                      fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: Colors.white.withOpacity(0.45),
+                      color: Colors.white.withOpacity(0.8),
                     )),
               ],
             ),
@@ -243,19 +219,24 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
       ),
     );
   }
+}
 
-  Widget _buildActionGrid(bool isSmall) {
+class _ActionGrid extends StatelessWidget {
+  const _ActionGrid();
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Ações do Dia',
+        const Text('Ações do Dia',
             style: TextStyle(
               fontFamily: 'Poppins',
-              fontSize: isSmall ? 15 : 17,
+              fontSize: 17,
               fontWeight: FontWeight.w700,
-              color: _textDark,
+              color: AppColors.textPrimary,
             )),
-        SizedBox(height: isSmall ? 14 : 16),
+        const SizedBox(height: 16),
         LayoutBuilder(
           builder: (context, constraints) {
             final cardW = (constraints.maxWidth - 12) / 2;
@@ -263,44 +244,51 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
               spacing: 12,
               runSpacing: 12,
               children: [
-                _buildActionCard(
+                _ActionCard(
                   width: cardW,
                   icon: Icons.record_voice_over_rounded,
                   label: 'Chamar Paciente',
-                  color: _blueAccent,
-                  isSmall: isSmall,
-                  onTap: () => _onAbaChanged(DrawerAba.chamar),
+                  color: AppColors.primary,
+                  onTap: () {
+                    final state = context.findAncestorStateOfType<_PostoDashboardScreenState>();
+                    state?._onAbaChanged(DrawerAba.chamar);
+                  },
                 ),
-                _buildActionCard(
+                _ActionCard(
                   width: cardW,
                   icon: Icons.person_off_rounded,
                   label: 'Registrar Ausência',
-                  color: _warningOrange,
-                  isSmall: isSmall,
-                  onTap: () => _onAbaChanged(DrawerAba.ausencia),
+                  color: AppColors.warning,
+                  onTap: () {
+                    final state = context.findAncestorStateOfType<_PostoDashboardScreenState>();
+                    state?._onAbaChanged(DrawerAba.ausencia);
+                  },
                 ),
-                _buildActionCard(
+                _ActionCard(
                   width: cardW,
                   icon: Icons.groups_rounded,
                   label: 'Fila do Posto',
-                  color: _greenAccent,
-                  isSmall: isSmall,
-                  onTap: () => _onAbaChanged(DrawerAba.fila),
+                  color: AppColors.success,
+                  onTap: () {
+                    final state = context.findAncestorStateOfType<_PostoDashboardScreenState>();
+                    state?._onAbaChanged(DrawerAba.fila);
+                  },
                 ),
-                _buildActionCard(
+                _ActionCard(
                   width: cardW,
                   icon: Icons.emergency_rounded,
                   label: 'Chamadas SOS',
-                  color: Colors.red,
-                  isSmall: isSmall,
-                  onTap: () => _onAbaChanged(DrawerAba.emergencia),
+                  color: AppColors.error,
+                  onTap: () {
+                    final state = context.findAncestorStateOfType<_PostoDashboardScreenState>();
+                    state?._onAbaChanged(DrawerAba.emergencia);
+                  },
                 ),
-                _buildActionCard(
+                _ActionCard(
                   width: cardW,
                   icon: Icons.history_rounded,
                   label: 'Histórico de Chamadas',
-                  color: _purpleAccent,
-                  isSmall: isSmall,
+                  color: AppColors.primaryDeep,
                   onTap: () {},
                 ),
               ],
@@ -310,27 +298,38 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
       ],
     );
   }
+}
 
-  Widget _buildActionCard({
-    required double width,
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isSmall,
-    required VoidCallback onTap,
-  }) {
+class _ActionCard extends StatelessWidget {
+  final double width;
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionCard({
+    required this.width,
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
         width: width,
         child: Container(
-          padding: EdgeInsets.all(isSmall ? 16 : 20),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderDim),
             boxShadow: const [
               BoxShadow(
-                color: _cardShadow,
+                color: Color(0x08000000),
                 blurRadius: 12,
                 offset: Offset(0, 4),
               ),
@@ -339,22 +338,22 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
           child: Column(
             children: [
               Container(
-                width: isSmall ? 42 : 48,
-                height: isSmall ? 42 : 48,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: isSmall ? 22 : 24, color: color),
+                child: Icon(icon, size: 24, color: color),
               ),
-              SizedBox(height: isSmall ? 12 : 16),
+              const SizedBox(height: 16),
               Text(label,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: isSmall ? 11 : 12,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: _textDark,
+                    color: AppColors.textPrimary,
                   )),
             ],
           ),
@@ -362,46 +361,55 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
       ),
     );
   }
+}
 
-  Widget _buildRecentActivity(bool isSmall) {
+class _RecentActivity extends StatelessWidget {
+  const _RecentActivity();
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Atividade Recente',
+        const Text('Atividade Recente',
             style: TextStyle(
               fontFamily: 'Poppins',
-              fontSize: isSmall ? 15 : 17,
+              fontSize: 17,
               fontWeight: FontWeight.w700,
-              color: _textDark,
+              color: AppColors.textPrimary,
             )),
-        SizedBox(height: isSmall ? 12 : 14),
+        const SizedBox(height: 14),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                  color: _cardShadow,
-                  blurRadius: 10,
-                  offset: Offset(0, 3)),
-            ],
+            border: Border.all(color: AppColors.borderDim),
           ),
-          child: Column(
+          child: const Column(
             children: [
-              _buildActivityItem('Paciente Chamado', 'Maria Santos - Guichê 02', 'há 2 min', isSmall),
-              const Divider(color: _dividerColor),
-              _buildActivityItem('Ausência Registrada', 'José Lima - Faltou', 'há 15 min', isSmall),
-              const Divider(color: _dividerColor),
-              _buildActivityItem('Início de Turno', 'Abertura do posto', 'há 1h', isSmall),
+              _ActivityItem('Paciente Chamado', 'Maria Santos - Guichê 02', 'há 2 min'),
+              Divider(color: AppColors.borderDim),
+              _ActivityItem('Ausência Registrada', 'José Lima - Faltou', 'há 15 min'),
+              Divider(color: AppColors.borderDim),
+              _ActivityItem('Início de Turno', 'Abertura do posto', 'há 1h'),
             ],
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildActivityItem(String titulo, String sub, String tempo, bool isSmall) {
+class _ActivityItem extends StatelessWidget {
+  final String titulo;
+  final String sub;
+  final String tempo;
+
+  const _ActivityItem(this.titulo, this.sub, this.tempo);
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -410,12 +418,12 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(titulo, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 13, color: _textDark)),
-                Text(sub, style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, color: _textMuted)),
+                Text(titulo, style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textPrimary)),
+                Text(sub, style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, color: AppColors.textSecondary)),
               ],
             ),
           ),
-          Text(tempo, style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: _textMuted)),
+          Text(tempo, style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: AppColors.textSecondary)),
         ],
       ),
     );

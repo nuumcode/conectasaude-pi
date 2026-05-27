@@ -20,10 +20,7 @@ class PostoChamarScreen extends StatefulWidget {
 class _PostoChamarScreenState extends State<PostoChamarScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   int _navIndex = 0;
-  static const _bgMain = Color(0xFFF0F5FC);
-  static const _textDark = Color(0xFF1A2138);
-  static const _textMuted = Color(0xFF7B8794);
-  static const _dividerColor = Color(0xFFE8EEF5);
+  
   static const _cardShadow = Color(0x0A000000);
 
   User? get _user => FirebaseAuth.instance.currentUser;
@@ -68,27 +65,22 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
     filaVirtualAguardando: 3,
   );
   final _consultas = <_Consulta>[
-    _Consulta('Maria Oliveira', 'Consulta presencial', '08:30',
-        const Color(0xFF4A9FFF)),
-    _Consulta('Carlos Mendes', 'Consulta', '09:15', const Color(0xFF00B894)),
-    _Consulta('Ana Paula Santos', 'Consulta presencial', '10:00',
-        const Color(0xFF9B59B6)),
-    _Consulta('João Pereira', 'Consulta presencial', '10:45',
-        const Color(0xFFE67E22)),
-    _Consulta('Fernanda Lima', 'Consulta presencial', '11:30',
-        const Color(0xFF1A72FF)),
+    _Consulta('Maria Oliveira', 'Consulta presencial', '08:30', AppColors.primary),
+    _Consulta('Carlos Mendes', 'Consulta', '09:15', AppColors.success),
+    _Consulta('Ana Paula Santos', 'Consulta presencial', '10:00', AppColors.primaryDeep),
+    _Consulta('João Pereira', 'Consulta presencial', '10:45', AppColors.warning),
+    _Consulta('Fernanda Lima', 'Consulta presencial', '11:30', AppColors.accent),
   ];
 
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final screenW = mq.size.width;
-    final isSmall = screenW < 360;
     final isDesktop = screenW >= 700;
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: _bgMain,
+      backgroundColor: AppColors.bgBase,
       drawer: isDesktop
           ? null
           : AppDrawer(
@@ -100,12 +92,12 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
               onLogout: _logout,
               role: UserRole.posto,
             ),
-      body: isDesktop ? _buildDesktop(isSmall) : _buildMobile(isSmall),
-      bottomNavigationBar: isDesktop ? null : _buildBottomNav(isSmall),
+      body: isDesktop ? _buildDesktop() : _buildMobile(),
+      bottomNavigationBar: isDesktop ? null : _buildBottomNav(),
     );
   }
 
-  Widget _buildDesktop(bool isSmall) {
+  Widget _buildDesktop() {
     return Row(children: [
       SizedBox(
         width: 260,
@@ -120,7 +112,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
           role: UserRole.posto,
         ),
       ),
-      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Container(width: 1, color: AppColors.borderDim),
       Expanded(
         child: Column(children: [
           AppHeader(
@@ -131,13 +123,13 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
             onMenuPressed: null,
             onProfilePressed: () {},
           ),
-          Expanded(child: _buildScrollableContent(isSmall)),
+          Expanded(child: _buildScrollableContent()),
         ]),
       ),
     ]);
   }
 
-  Widget _buildMobile(bool isSmall) {
+  Widget _buildMobile() {
     return Column(children: [
       AppHeader(
         userName: _user?.displayName?.split(' ').first ?? 'Gestor',
@@ -147,28 +139,28 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
         onProfilePressed: () {},
       ),
-      Expanded(child: _buildScrollableContent(isSmall)),
+      Expanded(child: _buildScrollableContent()),
     ]);
   }
 
-  Widget _buildScrollableContent(bool isSmall) {
+  Widget _buildScrollableContent() {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildWelcomeBanner(isSmall),
+          _buildWelcomeBanner(),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: isSmall ? 14 : 20),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: isSmall ? 20 : 24),
-                _buildResumoSection(isSmall),
-                SizedBox(height: isSmall ? 22 : 28),
-                _buildAcoesRapidas(isSmall),
-                SizedBox(height: isSmall ? 22 : 28),
-                _buildProximasConsultas(isSmall),
+                const SizedBox(height: 24),
+                _buildResumoSection(),
+                const SizedBox(height: 28),
+                _buildAcoesRapidas(),
+                const SizedBox(height: 28),
+                _buildProximasConsultas(),
                 const SizedBox(height: 100),
               ],
             ),
@@ -178,17 +170,12 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
     );
   }
 
-  Widget _buildWelcomeBanner(bool isSmall) {
+  Widget _buildWelcomeBanner() {
     return Container(
       width: double.infinity,
-      padding:
-          EdgeInsets.fromLTRB(isSmall ? 14 : 20, 20, isSmall ? 14 : 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.bgMid, AppColors.bgBase],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
+        gradient: AppColors.primaryGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
@@ -197,37 +184,32 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       child: Row(
         children: [
           Container(
-            width: isSmall ? 52 : 60,
-            height: isSmall ? 52 : 60,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.blueLt.withOpacity(0.3),
-                  AppColors.blue.withOpacity(0.1),
-                ],
-              ),
+              color: Colors.white.withOpacity(0.2),
               border: Border.all(
-                color: AppColors.blueLt.withOpacity(0.5),
+                color: Colors.white.withOpacity(0.3),
                 width: 2,
               ),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.person_rounded,
-              size: isSmall ? 28 : 32,
-              color: AppColors.blueLt,
+              size: 32,
+              color: Colors.white,
             ),
           ),
-          SizedBox(width: isSmall ? 12 : 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   _profissional.nome,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: isSmall ? 18 : 22,
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
@@ -240,10 +222,10 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                     const SizedBox(width: 6),
                     Text(
                       _profissional.especialidade,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: isSmall ? 12 : 13,
-                        color: AppColors.blueLt,
+                        fontSize: 13,
+                        color: Colors.white70,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -258,38 +240,38 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
   }
 
   // ── Resumo do dia ──────────────────────────────────────────
-  Widget _buildResumoSection(bool isSmall) {
+  Widget _buildResumoSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Resumo do dia',
+            const Text('Resumo do dia',
                 style: TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: isSmall ? 16 : 18,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: _textDark,
+                  color: AppColors.textPrimary,
                 )),
             Row(
               children: [
                 const Icon(Icons.calendar_today_rounded,
-                    size: 14, color: _textMuted),
+                    size: 14, color: AppColors.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   _getDataHoje(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: isSmall ? 11 : 12,
-                    color: _textMuted,
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ],
         ),
-        SizedBox(height: isSmall ? 12 : 16),
+        const SizedBox(height: 16),
         // Cards de stats
         LayoutBuilder(
           builder: (context, constraints) {
@@ -299,34 +281,31 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 _buildStatCard(
                   width: cardWidth,
                   icon: Icons.people_alt_outlined,
-                  iconColor: AppColors.blue,
-                  iconBg: AppColors.blue.withOpacity(0.1),
+                  iconColor: AppColors.primary,
+                  iconBg: AppColors.primary.withOpacity(0.1),
                   valor: '${_resumo.pacientesCadastrados}',
                   label: 'Pacientes',
                   sublabel: 'Cadastrados',
-                  isSmall: isSmall,
                 ),
                 const SizedBox(width: 8),
                 _buildStatCard(
                   width: cardWidth,
                   icon: Icons.event_note_rounded,
-                  iconColor: AppColors.accent,
-                  iconBg: AppColors.accent.withOpacity(0.1),
+                  iconColor: AppColors.success,
+                  iconBg: AppColors.success.withOpacity(0.1),
                   valor: '${_resumo.consultasHoje}',
                   label: 'Consultas Hoje',
                   sublabel: 'Agendadas',
-                  isSmall: isSmall,
                 ),
                 const SizedBox(width: 8),
                 _buildStatCard(
                   width: cardWidth,
                   icon: Icons.groups_outlined,
-                  iconColor: AppColors.blueLt,
-                  iconBg: AppColors.blueLt.withOpacity(0.1),
+                  iconColor: AppColors.primaryDeep,
+                  iconBg: AppColors.primaryDeep.withOpacity(0.1),
                   valor: '${_resumo.filaVirtualAguardando}',
                   label: 'Fila Virtual',
                   sublabel: 'Aguardando',
-                  isSmall: isSmall,
                 ),
               ],
             );
@@ -344,18 +323,18 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
     required String valor,
     required String label,
     required String sublabel,
-    required bool isSmall,
   }) {
     return SizedBox(
       width: width,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: isSmall ? 14 : 18,
-          horizontal: isSmall ? 8 : 12,
+        padding: const EdgeInsets.symmetric(
+          vertical: 18,
+          horizontal: 12,
         ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.borderDim),
           boxShadow: const [
             BoxShadow(
               color: _cardShadow,
@@ -367,41 +346,41 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
         child: Column(
           children: [
             Container(
-              width: isSmall ? 36 : 42,
-              height: isSmall ? 36 : 42,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 color: iconBg,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: isSmall ? 18 : 22, color: iconColor),
+              child: Icon(icon, size: 22, color: iconColor),
             ),
-            SizedBox(height: isSmall ? 8 : 12),
+            const SizedBox(height: 12),
             Text(
               valor,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: isSmall ? 22 : 26,
+                fontSize: 26,
                 fontWeight: FontWeight.w700,
-                color: _textDark,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: isSmall ? 10 : 11,
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: _textMuted,
+                color: AppColors.textSecondary,
               ),
             ),
             Text(
               sublabel,
               style: TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: isSmall ? 9 : 10,
-                color: _textMuted.withOpacity(0.7),
+                fontSize: 10,
+                color: AppColors.textSecondary.withOpacity(0.7),
               ),
             ),
           ],
@@ -411,18 +390,18 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
   }
 
   // ── Ações rápidas ──────────────────────────────────────────
-  Widget _buildAcoesRapidas(bool isSmall) {
+  Widget _buildAcoesRapidas() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Ações rápidas',
+        const Text('Ações rápidas',
             style: TextStyle(
               fontFamily: 'Poppins',
-              fontSize: isSmall ? 16 : 18,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: _textDark,
+              color: AppColors.textPrimary,
             )),
-        SizedBox(height: isSmall ? 12 : 16),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -430,8 +409,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 icon: Icons.people_outline_rounded,
                 label: 'Ver Pacientes',
                 sublabel: 'Acessar lista',
-                color: AppColors.blue,
-                isSmall: isSmall,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(width: 10),
@@ -440,8 +418,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 icon: Icons.queue_rounded,
                 label: 'Fila Virtual',
                 sublabel: 'Ver fila atual',
-                color: AppColors.accent,
-                isSmall: isSmall,
+                color: AppColors.success,
               ),
             ),
             const SizedBox(width: 10),
@@ -450,8 +427,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 icon: Icons.chat_outlined,
                 label: 'Mensagens',
                 sublabel: 'Ver conversas',
-                color: AppColors.blueLt,
-                isSmall: isSmall,
+                color: AppColors.primaryDeep,
               ),
             ),
           ],
@@ -465,52 +441,44 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
     required String label,
     required String sublabel,
     required Color color,
-    required bool isSmall,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: isSmall ? 14 : 16,
-        horizontal: isSmall ? 6 : 10,
+      padding: const EdgeInsets.symmetric(
+        vertical: 16,
+        horizontal: 10,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _dividerColor),
-        boxShadow: const [
-          BoxShadow(
-            color: _cardShadow,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: AppColors.borderDim),
       ),
       child: Column(
         children: [
           Container(
-            width: isSmall ? 34 : 40,
-            height: isSmall ? 34 : 40,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: isSmall ? 18 : 20, color: color),
+            child: Icon(icon, size: 20, color: color),
           ),
-          SizedBox(height: isSmall ? 8 : 10),
+          const SizedBox(height: 10),
           Text(label,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: isSmall ? 10 : 11,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: _textDark,
+                color: AppColors.textPrimary,
               )),
           const SizedBox(height: 2),
           Text(sublabel,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: isSmall ? 8 : 9,
-                color: _textMuted,
+                fontSize: 9,
+                color: AppColors.textSecondary,
               )),
         ],
       ),
@@ -518,49 +486,46 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
   }
 
   // ── Próximas consultas ─────────────────────────────────────
-  Widget _buildProximasConsultas(bool isSmall) {
+  Widget _buildProximasConsultas() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Próximas consultas',
+            const Text('Próximas consultas',
                 style: TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: isSmall ? 16 : 18,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: _textDark,
+                  color: AppColors.textPrimary,
                 )),
             GestureDetector(
               onTap: () {},
-              child: Text('Ver agenda completa >',
+              child: const Text('Ver agenda completa >',
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: isSmall ? 11 : 12,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.blue,
+                    color: AppColors.primary,
                   )),
             ),
           ],
         ),
-        SizedBox(height: isSmall ? 12 : 14),
+        const SizedBox(height: 14),
         ...List.generate(_consultas.length, (i) {
           final consulta = _consultas[i];
           return _buildConsultaItem(
-              consulta, isSmall, i == _consultas.length - 1);
+              consulta, i == _consultas.length - 1);
         }),
       ],
     );
   }
 
-  Widget _buildConsultaItem(_Consulta consulta, bool isSmall, bool isLast) {
+  Widget _buildConsultaItem(_Consulta consulta, bool isLast) {
     return Container(
       margin: EdgeInsets.only(bottom: isLast ? 0 : 1),
-      padding: EdgeInsets.symmetric(
-        vertical: isSmall ? 12 : 14,
-        horizontal: isSmall ? 12 : 14,
-      ),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(isLast ? 12 : 0).copyWith(
@@ -571,18 +536,14 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
           bottomLeft: Radius.circular(isLast ? 12 : 0),
           bottomRight: Radius.circular(isLast ? 12 : 0),
         ),
-        border: Border(
-          bottom: isLast
-              ? BorderSide.none
-              : BorderSide(color: _dividerColor.withOpacity(0.6), width: 0.5),
-        ),
+        border: Border.all(color: AppColors.borderDim),
       ),
       child: Row(
         children: [
           // Avatar
           Container(
-            width: isSmall ? 38 : 44,
-            height: isSmall ? 38 : 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: consulta.avatarColor.withOpacity(0.1),
@@ -592,32 +553,32 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
               ),
             ),
             child: Icon(Icons.person_rounded,
-                size: isSmall ? 20 : 22, color: consulta.avatarColor),
+                size: 22, color: consulta.avatarColor),
           ),
-          SizedBox(width: isSmall ? 10 : 14),
+          const SizedBox(width: 14),
           // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(consulta.nome,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: isSmall ? 13 : 14,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _textDark,
+                      color: AppColors.textPrimary,
                     )),
                 const SizedBox(height: 2),
                 Row(
                   children: [
                     const Icon(Icons.medical_services_outlined,
-                        size: 12, color: _textMuted),
+                        size: 12, color: AppColors.textSecondary),
                     const SizedBox(width: 4),
                     Text(consulta.tipo,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
-                          fontSize: isSmall ? 10 : 11,
-                          color: _textMuted,
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
                         )),
                   ],
                 ),
@@ -626,20 +587,20 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
           ),
           // Horário
           Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmall ? 10 : 12,
-              vertical: isSmall ? 6 : 8,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
             ),
             decoration: BoxDecoration(
-              color: AppColors.blue.withOpacity(0.06),
+              color: AppColors.primary.withOpacity(0.06),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(consulta.horario,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: isSmall ? 12 : 13,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.blue,
+                  color: AppColors.primary,
                 )),
           ),
         ],
@@ -648,7 +609,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
   }
 
   // ── Bottom Navigation Bar ──────────────────────────────────
-  Widget _buildBottomNav(bool isSmall) {
+  Widget _buildBottomNav() {
     final items = [
       _NavItem(Icons.home_rounded, 'Home'),
       _NavItem(Icons.calendar_today_rounded, 'Agenda'),
@@ -663,6 +624,7 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
       ),
       decoration: BoxDecoration(
         color: Colors.white,
+        border: const Border(top: BorderSide(color: AppColors.borderDim)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
@@ -685,17 +647,17 @@ class _PostoChamarScreenState extends State<PostoChamarScreen> {
                 children: [
                   Icon(
                     items[i].icon,
-                    size: isSmall ? 22 : 24,
-                    color: selected ? AppColors.blue : _textMuted,
+                    size: 24,
+                    color: selected ? AppColors.primary : AppColors.textSecondary,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     items[i].label,
                     style: TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: isSmall ? 9 : 10,
+                      fontSize: 10,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                      color: selected ? AppColors.blue : _textMuted,
+                      color: selected ? AppColors.primary : AppColors.textSecondary,
                     ),
                   ),
                 ],

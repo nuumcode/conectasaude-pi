@@ -1,12 +1,3 @@
-// TODO Implement this library.
-import 'package:flutter/material.dart';
-import '../../core/theme/app_theme.dart';
-
-// ─────────────────────────────────────────────────────────────
-//  SecretariaEscalaScreen — Gestão de escalas pela Secretaria
-//  Permite visualizar e editar escalas de todas as UBS
-//  TODO: conectar Firestore collection 'escalas'
-// ─────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../widgets/app_header.dart';
@@ -83,7 +74,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
   }
 
   void _onAbaChanged(dynamic aba) {
-    if (aba == DrawerAba.escalas) return;
+    if (aba == DrawerAba.escala) return;
     Widget? destino;
     if (aba == DrawerAba.inicio) destino = const SecretariaDashboardScreen();
     
@@ -111,7 +102,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
               userName: _user?.displayName ?? 'Administrador',
               userEmail: _user?.email ?? '',
               userPhoto: _user?.photoURL,
-              abaAtual: DrawerAba.escalas,
+              abaAtual: DrawerAba.escala,
               onAbaChanged: _onAbaChanged,
               onLogout: _logout,
               role: UserRole.secretaria,
@@ -119,7 +110,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       body: isDesktop ? _buildDesktop() : _buildMobile(),
       floatingActionButton: FloatingActionButton(
         onPressed: _adicionarEscala,
-        backgroundColor: AppColors.primaryDeep,
+        backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -133,14 +124,14 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
           userName: _user?.displayName ?? 'Administrador',
           userEmail: _user?.email ?? '',
           userPhoto: _user?.photoURL,
-          abaAtual: DrawerAba.escalas,
+          abaAtual: DrawerAba.escala,
           onAbaChanged: _onAbaChanged,
           onLogout: _logout,
           isFixed: true,
           role: UserRole.secretaria,
         ),
       ),
-      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Container(width: 1, color: AppColors.borderDim),
       Expanded(
         child: Column(children: [
           AppHeader(
@@ -178,9 +169,9 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       color: AppColors.bgMid,
       child: TabBar(
         controller: _tabCtrl,
-        indicatorColor: AppColors.blueLt,
-        labelColor: AppColors.blueLt,
-        unselectedLabelColor: Colors.white38,
+        indicatorColor: AppColors.primary,
+        labelColor: AppColors.primary,
+        unselectedLabelColor: AppColors.textSecondary,
         labelStyle: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 13,
@@ -243,17 +234,17 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
-                  color: sel ? AppColors.blue : const Color(0xFF0F1B3D),
+                  color: sel ? AppColors.primary : AppColors.surfaceDim,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: sel ? AppColors.blueLt : const Color(0xFF1E3A6E)),
+                      color: sel ? AppColors.primary : AppColors.borderDim),
                 ),
                 child: Text(u,
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 11,
                       fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
-                      color: sel ? Colors.white : Colors.white60,
+                      color: sel ? Colors.white : AppColors.textSecondary,
                     )),
               ),
             ),
@@ -276,7 +267,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left, color: Colors.white54),
+            icon: const Icon(Icons.chevron_left, color: AppColors.textSecondary),
             onPressed: () => setState(() => _semanaSelecionada--),
           ),
           Text(label,
@@ -284,10 +275,10 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                 fontFamily: 'Poppins',
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Colors.white,
+                color: AppColors.textPrimary,
               )),
           IconButton(
-            icon: const Icon(Icons.chevron_right, color: Colors.white54),
+            icon: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             onPressed: () => setState(() => _semanaSelecionada++),
           ),
         ],
@@ -301,9 +292,9 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1B3D),
+        color: AppColors.bgBase,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1E3A6E)),
+        border: Border.all(color: AppColors.borderDim),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,22 +311,22 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                           fontFamily: 'Poppins',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: AppColors.textPrimary,
                         )),
                     Row(
                       children: [
                         Text(item.especialidade,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 11,
-                              color: AppColors.blueLt.withOpacity(0.7),
+                              color: AppColors.textSecondary,
                             )),
                         if (_unidadeSelecionada == 'Todas') ...[
                           Text(' • ${item.unidade}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 10,
-                                color: Colors.white.withOpacity(0.3),
+                                color: AppColors.textTertiary,
                               )),
                         ],
                       ],
@@ -344,10 +335,10 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                 ),
               ),
               Text('${item.horaInicio}-${item.horaFim}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 11,
-                    color: Colors.white.withOpacity(0.4),
+                    color: AppColors.textSecondary,
                   )),
             ],
           ),
@@ -366,13 +357,13 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: ativo
-                          ? AppColors.greenLt.withOpacity(0.2)
-                          : Colors.white.withOpacity(0.03),
+                          ? AppColors.primary.withOpacity(0.1)
+                          : AppColors.surfaceDim,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: ativo
-                            ? AppColors.greenLt.withOpacity(0.4)
-                            : Colors.white.withOpacity(0.06),
+                            ? AppColors.primary.withOpacity(0.3)
+                            : AppColors.borderDim,
                       ),
                     ),
                     child: Column(
@@ -383,16 +374,16 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                               fontSize: 9,
                               fontWeight: FontWeight.w500,
                               color: ativo
-                                  ? AppColors.greenLt
-                                  : Colors.white.withOpacity(0.3),
+                                  ? AppColors.primary
+                                  : AppColors.textTertiary,
                             )),
                         const SizedBox(height: 2),
                         Icon(
                           ativo ? Icons.check_circle : Icons.circle_outlined,
                           size: 14,
                           color: ativo
-                              ? AppColors.greenLt
-                              : Colors.white.withOpacity(0.15),
+                              ? AppColors.primary
+                              : AppColors.textHint,
                         ),
                       ],
                     ),
@@ -453,20 +444,20 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.blue.withOpacity(0.2),
-            const Color(0xFF0F1B3D),
+            AppColors.primary.withOpacity(0.05),
+            AppColors.surfaceDim,
           ],
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.blue.withOpacity(0.3)),
+        border: Border.all(color: AppColors.borderDim),
       ),
       child: Row(
         children: [
-          _coberturaMetrica('78%', 'Cobertura Geral', AppColors.blueLt),
+          _coberturaMetrica('78%', 'Cobertura Geral', AppColors.primary),
           _dividerVertical(),
-          _coberturaMetrica('23', 'Profissionais', AppColors.greenLt),
+          _coberturaMetrica('23', 'Profissionais', AppColors.success),
           _dividerVertical(),
-          _coberturaMetrica('5', 'Unidades', const Color(0xFFFFA726)),
+          _coberturaMetrica('5', 'Unidades', AppColors.warning),
         ],
       ),
     );
@@ -484,10 +475,10 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                 color: cor,
               )),
           Text(label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 10,
-                color: Colors.white.withOpacity(0.5),
+                color: AppColors.textSecondary,
               )),
         ],
       ),
@@ -498,7 +489,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
     return Container(
       width: 1,
       height: 40,
-      color: Colors.white.withOpacity(0.08),
+      color: AppColors.borderDim,
     );
   }
 
@@ -507,9 +498,9 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1B3D),
+        color: AppColors.bgBase,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1E3A6E)),
+        border: Border.all(color: AppColors.borderDim),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,24 +508,24 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
           Row(
             children: [
               const Icon(Icons.local_hospital,
-                  size: 16, color: AppColors.blueLt),
+                  size: 16, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(data.unidade,
                   style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                   )),
             ],
           ),
           const SizedBox(height: 12),
           ...data.especialidades.entries.map((e) {
             final cor = e.value >= 0.8
-                ? AppColors.greenLt
+                ? AppColors.success
                 : e.value >= 0.5
-                    ? const Color(0xFFFFA726)
-                    : const Color(0xFFEF5350);
+                    ? AppColors.warning
+                    : AppColors.error;
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
@@ -542,10 +533,10 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                   Expanded(
                     flex: 2,
                     child: Text(e.key,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
-                          color: Colors.white.withOpacity(0.6),
+                          color: AppColors.textSecondary,
                         )),
                   ),
                   Expanded(
@@ -555,7 +546,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                       child: LinearProgressIndicator(
                         value: e.value,
                         minHeight: 6,
-                        backgroundColor: Colors.white.withOpacity(0.05),
+                        backgroundColor: AppColors.surfaceDim,
                         valueColor: AlwaysStoppedAnimation(cor),
                       ),
                     ),
@@ -580,7 +571,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
   void _adicionarEscala() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF0F1B3D),
+      backgroundColor: AppColors.bgBase,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -595,15 +586,15 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
                   fontFamily: 'Poppins',
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                 )),
             const SizedBox(height: 8),
-            Text(
+            const Text(
                 'Funcionalidade em desenvolvimento.\nConectar com Firebase para persistência.',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 13,
-                  color: Colors.white.withOpacity(0.5),
+                  color: AppColors.textSecondary,
                 )),
             const SizedBox(height: 24),
             SizedBox(
@@ -611,7 +602,7 @@ class _SecretariaEscalaScreenState extends State<SecretariaEscalaScreen>
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.blue,
+                  backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

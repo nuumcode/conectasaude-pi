@@ -93,7 +93,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     // Retorna apenas o fundo sutil enquanto decide o destino.
     // Isso evita o "pisca" da logo e mantém a elegância.
     return const Scaffold(
-      backgroundColor: AppColors.navyDeep,
+      backgroundColor: AppColors.bgBase,
       body: AppBackground(child: SizedBox.expand()),
     );
   }

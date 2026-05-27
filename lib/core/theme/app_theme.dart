@@ -2,64 +2,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // ─────────────────────────────────────────────────────────────
-//  ConectaSaúdePI — Design System
+//  ConectaSaúdePI — Design System (LIGHT THEME)
 // ─────────────────────────────────────────────────────────────
 
 class AppColors {
   AppColors._();
 
-  // ── Paleta base ──────────────────────────────────────────
-  static const Color bgBase = Color(0xFF061030); // fundo principal
-  static const Color bgMid = Color(0xFF0D2B6B); // gradiente radial
+  // ── Paleta base (Claro) ─────────────────────────
+  static const Color bgBase = Color(0xFFFFFFFF); // Fundo principal branco puro
+  static const Color bgMid = Color(0xFFFFFFFF);  // superfícies
 
-  // ── Primárias ────────────────────────────────────────────
-  static const Color primary = Color(0xFF4A9FFF); // azul claro (alias blueLt)
-  static const Color primaryDeep = Color(0xFF1A72FF); // azul médio
-  static const Color accent = Color(0xFF00D4AA); // verde-água (alias greenLt)
-  static const Color accentDeep = Color(0xFF00B894); // verde médio
+  // ── Primárias (Azul ConectaSaúdePI - Baseado na Index) ─────────────────────────
+  static const Color primary = Color(0xFF1A72FF);     // Azul principal vibrante
+  static const Color primaryDeep = Color(0xFF0D47A1); // azul escuro
+  static const Color accent = Color(0xFF10B981);      // verde sucesso
+  static const Color accentDeep = Color(0xFF059669);
 
-  // ── Aliases semânticos (compat. com código anterior) ─────
-  static const Color navyDeep = bgBase;
-  static const Color navyMid = bgMid;
-  static const Color navyLight = Color(0xFF0A2A6E);
-  static const Color blue = primaryDeep;
-  static const Color blueLt = primary;
-  static const Color blueDark = Color(0xFF0840B0);
-  static const Color green = accentDeep;
-  static const Color greenLt = accent;
+  // ── Aliases para compatibilidade ──────────────────────────
+  static const Color navyDeep = Color(0xFF061030); // Usado em áreas específicas dark
+  static const Color blue = primary;
+  static const Color blueLt = Color(0xFFE0E7FF);
 
   // ── Gradientes ───────────────────────────────────────────
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryDeep, accent],
-    begin: Alignment.centerLeft,
-    end: Alignment.centerRight,
-  );
-
-  static const RadialGradient bgRadial = RadialGradient(
-    center: Alignment(0, -0.3),
-    radius: 1.5,
-    colors: [bgMid, bgBase],
+    colors: [primary, Color(0xFF4A9FFF)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 
   // ── Textos ───────────────────────────────────────────────
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xB3FFFFFF);
-  static const Color textTertiary = Color(0x66FFFFFF);
-  static const Color textHint = Color(0x4DFFFFFF);
+  static const Color textPrimary = Color(0xFF1E293B);   // quase preto
+  static const Color textSecondary = Color(0xFF64748B); // cinza médio
+  static const Color textTertiary = Color(0xFF94A3B8);  // cinza claro
+  static const Color textHint = Color(0xFFCBD5E1);
 
   // ── Superfícies / bordas ─────────────────────────────────
-  static const Color borderDim = Color(0x14FFFFFF);
-  static const Color borderMid = Color(0x26FFFFFF);
-  static const Color surfaceDim = Color(0x0AFFFFFF);
-  static const Color surfaceMid = Color(0x14FFFFFF);
+  static const Color borderDim = Color(0xFFE2E8F0);
+  static const Color borderMid = Color(0xFFCBD5E1);
+  static const Color surfaceDim = Color(0xFFF1F5F9);
+  static const Color surfaceMid = Color(0xFFFFFFFF);
 
   // ── Status ───────────────────────────────────────────────
-  static const Color error = Color(0xFFFF5C5C);
-  static const Color success = Color(0xFF00D4AA);
-  static const Color warning = Color(0xFFFFB74D);
+  static const Color error = Color(0xFFEF4444);
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color greenLt = accent; // Alias for compatibility
 }
-
-// ─────────────────────────────────────────────────────────────
 
 class AppTextStyles {
   AppTextStyles._();
@@ -104,7 +92,7 @@ class AppTextStyles {
       fontFamily: _f,
       fontSize: 15,
       fontWeight: FontWeight.w700,
-      color: AppColors.textPrimary,
+      color: Colors.white,
       letterSpacing: 0.3);
 
   static const TextStyle labelSmall = TextStyle(
@@ -119,34 +107,7 @@ class AppTextStyles {
       fontSize: 12,
       fontWeight: FontWeight.w400,
       color: AppColors.textSecondary);
-
-  // App name
-  static const TextStyle appNameConecta = TextStyle(
-      fontFamily: _f,
-      fontSize: 28,
-      fontWeight: FontWeight.w300,
-      color: AppColors.textPrimary,
-      letterSpacing: -0.3,
-      height: 1.1);
-
-  static const TextStyle appNameSaude = TextStyle(
-      fontFamily: _f,
-      fontSize: 28,
-      fontWeight: FontWeight.w800,
-      color: AppColors.primary,
-      letterSpacing: -0.3,
-      height: 1.1);
-
-  static const TextStyle appNamePi = TextStyle(
-      fontFamily: _f,
-      fontSize: 28,
-      fontWeight: FontWeight.w800,
-      color: AppColors.accent,
-      letterSpacing: -0.3,
-      height: 1.1);
 }
-
-// ─────────────────────────────────────────────────────────────
 
 class AppDimensions {
   AppDimensions._();
@@ -164,8 +125,6 @@ class AppDimensions {
   static const double iconSizeLg = 22.0;
 }
 
-// ─────────────────────────────────────────────────────────────
-
 class AppTheme {
   AppTheme._();
 
@@ -173,97 +132,77 @@ class AppTheme {
         useMaterial3: true,
         fontFamily: 'Poppins',
         scaffoldBackgroundColor: AppColors.bgBase,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primaryDeep,
-          secondary: AppColors.accent,
-          surface: AppColors.bgMid,
+        brightness: Brightness.light,
+        colorScheme: const ColorScheme.light(
+          primary: AppColors.primary,
+          secondary: AppColors.primary,
+          surface: Colors.white,
           error: AppColors.error,
           onPrimary: Colors.white,
-          onSurface: Colors.white,
+          onSurface: AppColors.textPrimary,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.white,
           elevation: 0,
+          centerTitle: true,
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.light,
+            statusBarIconBrightness: Brightness.dark,
           ),
           titleTextStyle: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 17,
               fontWeight: FontWeight.w600,
-              color: Colors.white),
-          iconTheme: IconThemeData(color: Colors.white),
+              color: AppColors.textPrimary),
+          iconTheme: IconThemeData(color: AppColors.textPrimary),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryDeep,
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            minimumSize:
-                const Size(double.infinity, AppDimensions.buttonHeight),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusLg)),
-            textStyle: AppTextStyles.labelLarge,
+            minimumSize: const Size(double.infinity, AppDimensions.buttonHeight),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMd)),
+            textStyle: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700, fontSize: 14),
             elevation: 0,
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white,
-            minimumSize:
-                const Size(double.infinity, AppDimensions.buttonHeight),
-            side: const BorderSide(color: AppColors.borderMid),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusLg)),
-            textStyle: AppTextStyles.labelLarge,
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
             foregroundColor: AppColors.primary,
-            textStyle: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 13,
-                fontWeight: FontWeight.w600),
+            minimumSize: const Size(double.infinity, AppDimensions.buttonHeight),
+            side: const BorderSide(color: AppColors.borderDim),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMd)),
+            textStyle: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 14),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: AppColors.surfaceDim,
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingLg,
-              vertical: AppDimensions.paddingMd),
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.borderDim)),
           enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.borderDim)),
           focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-              borderSide:
-                  const BorderSide(color: AppColors.primary, width: 1.5)),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
           errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.error)),
-          hintStyle: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14,
-              color: AppColors.textHint,
-              fontWeight: FontWeight.w400),
-          prefixIconColor: AppColors.textTertiary,
-          suffixIconColor: AppColors.textTertiary,
+          hintStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppColors.textTertiary),
+          labelStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppColors.textSecondary),
+          prefixIconColor: AppColors.textSecondary,
         ),
-        dividerTheme:
-            const DividerThemeData(color: AppColors.borderDim, thickness: 1),
       );
 
   static void applySystemUI() {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
       systemNavigationBarColor: AppColors.bgBase,
-      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ));
   }
 

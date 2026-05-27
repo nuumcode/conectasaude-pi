@@ -14,6 +14,7 @@ class AppBrandLogo extends StatelessWidget {
   final bool isHero;
   final String heroTag;
   final CrossAxisAlignment crossAxisAlignment;
+  final bool isLight;
 
   const AppBrandLogo({
     super.key,
@@ -23,6 +24,7 @@ class AppBrandLogo extends StatelessWidget {
     this.isHero = true,
     this.heroTag = 'brand-logo',
     this.crossAxisAlignment = CrossAxisAlignment.center,
+    this.isLight = false,
   });
 
   @override
@@ -101,6 +103,8 @@ class AppBrandLogo extends StatelessWidget {
 
   Widget _buildBrandName() {
     final isCenter = crossAxisAlignment == CrossAxisAlignment.center;
+    final baseColor = isLight ? Colors.white : AppColors.textPrimary;
+    final subColor = isLight ? Colors.white70 : AppColors.textTertiary;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -109,46 +113,34 @@ class AppBrandLogo extends StatelessWidget {
         RichText(
           textAlign: isCenter ? TextAlign.center : TextAlign.start,
           text: TextSpan(children: [
-            const TextSpan(
+            TextSpan(
               text: 'Conecta',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 20,
                 fontWeight: FontWeight.w300,
-                color: Colors.white,
+                color: baseColor,
                 letterSpacing: -0.3,
               ),
             ),
-            TextSpan(
+            const TextSpan(
               text: 'Saúde',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: AppColors.blueLt,
+                color: AppColors.primary,
                 letterSpacing: -0.3,
-                shadows: [
-                  Shadow(
-                    color: AppColors.blueLt.withOpacity(0.4),
-                    blurRadius: 10,
-                  )
-                ],
               ),
             ),
-            TextSpan(
+            const TextSpan(
               text: 'PI',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: AppColors.greenLt,
+                color: AppColors.accent,
                 letterSpacing: -0.3,
-                shadows: [
-                  Shadow(
-                    color: AppColors.greenLt.withOpacity(0.5),
-                    blurRadius: 10,
-                  )
-                ],
               ),
             ),
           ]),
@@ -161,7 +153,7 @@ class AppBrandLogo extends StatelessWidget {
             fontFamily: 'Poppins',
             fontSize: 8,
             fontWeight: FontWeight.w600,
-            color: Colors.white.withOpacity(0.28),
+            color: subColor,
             letterSpacing: 2.2,
           ),
         ),

@@ -65,7 +65,10 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
   // ── AUTH ──────────────────────────────────────────────────────────
   Future<void> _entrar() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() { _loading = true; _erro = null; });
+    setState(() {
+      _loading = true;
+      _erro = null;
+    });
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailCtrl.text.trim(),
@@ -81,13 +84,19 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
 
   Future<void> _cadastrar() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() { _loading = true; _erro = null; });
+    setState(() {
+      _loading = true;
+      _erro = null;
+    });
     try {
       final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailCtrl.text.trim(),
         password: _senhaCtrl.text,
       );
-      await FirebaseFirestore.instance.collection('usuarios').doc(cred.user!.uid).set({
+      await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(cred.user!.uid)
+          .set({
         'nome': _nomeCtrl.text.trim(),
         'cpf': _cpfCtrl.text.replaceAll(RegExp(r'\D'), ''),
         'telefone': _telefoneCtrl.text.replaceAll(RegExp(r'\D'), ''),
@@ -105,14 +114,24 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
   }
 
   Future<void> _entrarComGoogle() async {
-    setState(() { _loading = true; _erro = null; });
+    setState(() {
+      _loading = true;
+      _erro = null;
+    });
     try {
       final googleProvider = GoogleAuthProvider();
-      final userCred = await FirebaseAuth.instance.signInWithPopup(googleProvider);
+      final userCred =
+          await FirebaseAuth.instance.signInWithPopup(googleProvider);
       final user = userCred.user!;
-      final doc = await FirebaseFirestore.instance.collection('usuarios').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .get();
       if (!doc.exists) {
-        await FirebaseFirestore.instance.collection('usuarios').doc(user.uid).set({
+        await FirebaseFirestore.instance
+            .collection('usuarios')
+            .doc(user.uid)
+            .set({
           'nome': user.displayName ?? '',
           'email': user.email,
           'uid': user.uid,
@@ -130,11 +149,16 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
 
   String _traduzirErro(String code) {
     switch (code) {
-      case 'user-not-found': return 'E-mail não cadastrado.';
-      case 'wrong-password': return 'Senha incorreta.';
-      case 'invalid-credential': return 'E-mail ou senha inválidos.';
-      case 'email-already-in-use': return 'E-mail já em uso.';
-      default: return 'Erro ao processar. Tente novamente.';
+      case 'user-not-found':
+        return 'E-mail não cadastrado.';
+      case 'wrong-password':
+        return 'Senha incorreta.';
+      case 'invalid-credential':
+        return 'E-mail ou senha inválidos.';
+      case 'email-already-in-use':
+        return 'E-mail já em uso.';
+      default:
+        return 'Erro ao processar. Tente novamente.';
     }
   }
 
@@ -144,7 +168,7 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
     final isLogin = _modo == _Modo.login;
 
     return Scaffold(
-      backgroundColor: AppColors.navyDeep,
+      backgroundColor: AppColors.bgBase,
       body: AppBackground(
         child: SafeArea(
           child: Stack(children: [
@@ -161,46 +185,95 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
                       children: [
                         const SizedBox(height: 52),
                         const AppEntrance(
-                          child: AppBrandLogo(size: 56, showText: true, crossAxisAlignment: CrossAxisAlignment.start),
+                          child: AppBrandLogo(
+                              size: 56,
+                              showText: true,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              isLight: true),
                         ),
                         const SizedBox(height: 32),
-
                         AppFadeSwitcher(
                           child: Column(
                             key: ValueKey(_modo),
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(isLogin ? 'Bem-vindo(a) de volta!' : 'Criar nova conta', style: AppTextStyles.headlineLarge),
+                              Text(
+                                  isLogin
+                                      ? 'Bem-vindo(a) de volta!'
+                                      : 'Criar nova conta',
+                                  style: AppTextStyles.headlineLarge
+                                      .copyWith(color: Colors.white)),
                               const SizedBox(height: 4),
-                              Text(isLogin ? 'Faça login para continuar' : 'Preencha os dados abaixo', style: AppTextStyles.bodyMedium),
+                              Text(
+                                  isLogin
+                                      ? 'Faça login para continuar'
+                                      : 'Preencha os dados abaixo',
+                                  style: AppTextStyles.bodyMedium
+                                      .copyWith(color: Colors.white70)),
                             ],
                           ),
                         ),
                         const SizedBox(height: 22),
-
                         if (!isLogin) ...[
-                          _fieldEntrance(0, _buildField(controller: _nomeCtrl, hint: 'Nome completo', icon: Icons.person_outline_rounded, textCapitalization: TextCapitalization.words)),
+                          _fieldEntrance(
+                              0,
+                              _buildField(
+                                  controller: _nomeCtrl,
+                                  hint: 'Nome completo',
+                                  icon: Icons.person_outline_rounded,
+                                  textCapitalization:
+                                      TextCapitalization.words)),
                           const SizedBox(height: 12),
-                          _fieldEntrance(1, _buildField(controller: _cpfCtrl, hint: 'CPF', icon: Icons.badge_outlined, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly, _CpfFormatter()])),
+                          _fieldEntrance(
+                              1,
+                              _buildField(
+                                  controller: _cpfCtrl,
+                                  hint: 'CPF',
+                                  icon: Icons.badge_outlined,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    _CpfFormatter()
+                                  ])),
                           const SizedBox(height: 12),
-                          _fieldEntrance(2, _buildField(controller: _telefoneCtrl, hint: 'Telefone', icon: Icons.phone_outlined, keyboardType: TextInputType.phone, inputFormatters: [FilteringTextInputFormatter.digitsOnly, _TelefoneFormatter()])),
+                          _fieldEntrance(
+                              2,
+                              _buildField(
+                                  controller: _telefoneCtrl,
+                                  hint: 'Telefone',
+                                  icon: Icons.phone_outlined,
+                                  keyboardType: TextInputType.phone,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    _TelefoneFormatter()
+                                  ])),
                           const SizedBox(height: 12),
                         ],
-
-                        _fieldEntrance(isLogin ? 0 : 3, _buildField(controller: _emailCtrl, hint: 'E-mail', icon: Icons.mail_outline_rounded, keyboardType: TextInputType.emailAddress)),
+                        _fieldEntrance(
+                            isLogin ? 0 : 3,
+                            _buildField(
+                                controller: _emailCtrl,
+                                hint: 'E-mail',
+                                icon: Icons.mail_outline_rounded,
+                                keyboardType: TextInputType.emailAddress)),
                         const SizedBox(height: 12),
-
-                        _fieldEntrance(isLogin ? 1 : 4, _buildField(
-                          controller: _senhaCtrl,
-                          hint: 'Senha',
-                          icon: Icons.lock_outline_rounded,
-                          obscure: !_senhaVis,
-                          suffix: IconButton(
-                            icon: Icon(_senhaVis ? Icons.visibility : Icons.visibility_off, color: AppColors.textTertiary),
-                            onPressed: () => setState(() => _senhaVis = !_senhaVis),
-                          ),
-                        )),
-
+                        _fieldEntrance(
+                            isLogin ? 1 : 4,
+                            _buildField(
+                              controller: _senhaCtrl,
+                              hint: 'Senha',
+                              icon: Icons.lock_outline_rounded,
+                              obscure: !_senhaVis,
+                              suffix: IconButton(
+                                icon: Icon(
+                                    _senhaVis
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: AppColors.textTertiary),
+                                onPressed: () =>
+                                    setState(() => _senhaVis = !_senhaVis),
+                              ),
+                            )),
                         if (_erro != null) ...[
                           const SizedBox(height: 12),
                           AppEntrance(
@@ -209,43 +282,52 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
                               decoration: BoxDecoration(
                                 color: AppColors.error.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                                border: Border.all(
+                                    color:
+                                        AppColors.error.withValues(alpha: 0.2)),
                               ),
                               child: Row(children: [
-                                const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                                const Icon(Icons.error_outline,
+                                    color: AppColors.error, size: 18),
                                 const SizedBox(width: 8),
-                                Expanded(child: Text(_erro!, style: AppTextStyles.caption.copyWith(color: AppColors.error))),
+                                Expanded(
+                                    child: Text(_erro!,
+                                        style: AppTextStyles.caption
+                                            .copyWith(color: AppColors.error))),
                               ]),
                             ),
                           ),
                         ],
-
                         if (!isLogin) ...[
                           const SizedBox(height: 12),
-                          _fieldEntrance(5, _buildField(
-                            controller: _confirmaCtrl,
-                            hint: 'Confirmar Senha',
-                            icon: Icons.lock_outline_rounded,
-                            obscure: !_confirmaVis,
-                            suffix: IconButton(
-                              icon: Icon(_confirmaVis ? Icons.visibility : Icons.visibility_off, color: AppColors.textTertiary),
-                              onPressed: () => setState(() => _confirmaVis = !_confirmaVis),
-                            ),
-                          )),
+                          _fieldEntrance(
+                              5,
+                              _buildField(
+                                controller: _confirmaCtrl,
+                                hint: 'Confirmar Senha',
+                                icon: Icons.lock_outline_rounded,
+                                obscure: !_confirmaVis,
+                                suffix: IconButton(
+                                  icon: Icon(
+                                      _confirmaVis
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                      color: AppColors.textTertiary),
+                                  onPressed: () => setState(
+                                      () => _confirmaVis = !_confirmaVis),
+                                ),
+                              )),
                         ],
-
                         const SizedBox(height: 24),
                         AppEntrance(
                           delay: const Duration(milliseconds: 400),
                           child: _buildBotaoPrincipal(),
                         ),
-
                         const SizedBox(height: 20),
                         AppEntrance(
                           delay: const Duration(milliseconds: 500),
                           child: _buildBotaoGoogle(),
                         ),
-
                         const SizedBox(height: 28),
                         AppEntrance(
                           delay: const Duration(milliseconds: 600),
@@ -281,17 +363,31 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
     TextCapitalization textCapitalization = TextCapitalization.none,
     List<TextInputFormatter>? inputFormatters,
   }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscure,
-      keyboardType: keyboardType,
-      textCapitalization: textCapitalization,
-      inputFormatters: inputFormatters,
-      style: AppTextStyles.bodyLarge,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: Icon(icon, color: AppColors.textTertiary, size: 20),
-        suffixIcon: suffix,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscure,
+        keyboardType: keyboardType,
+        textCapitalization: textCapitalization,
+        inputFormatters: inputFormatters,
+        style: AppTextStyles.bodyLarge.copyWith(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+          fillColor: Colors.transparent,
+          filled: true,
+          prefixIcon: Icon(icon, color: Colors.white70, size: 20),
+          suffixIcon: suffix,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+          focusedErrorBorder: InputBorder.none,
+        ),
       ),
     );
   }
@@ -299,23 +395,43 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
   Widget _buildBotaoPrincipal() {
     return SizedBox(
       width: double.infinity,
-      height: 54,
+      height: 56,
       child: Container(
         decoration: BoxDecoration(
-          gradient: AppColors.primaryGradient,
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1A72FF), Color(0xFF41F1F9)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: AppColors.blue.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+                color: const Color(0xFF1A72FF).withValues(alpha: 0.25),
+                blurRadius: 16,
+                offset: const Offset(0, 6))
+          ],
         ),
         child: ElevatedButton(
-          onPressed: _loading ? null : (_modo == _Modo.login ? _entrar : _cadastrar),
+          onPressed:
+              _loading ? null : (_modo == _Modo.login ? _entrar : _cadastrar),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
             shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
-          child: _loading 
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            : Text(_modo == _Modo.login ? 'Entrar' : 'Criar Conta', style: AppTextStyles.labelLarge),
+          child: _loading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white))
+              : Text(_modo == _Modo.login ? 'Entrar' : 'Criar Conta',
+                  style: AppTextStyles.labelLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16)),
         ),
       ),
     );
@@ -328,15 +444,22 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
       child: OutlinedButton(
         onPressed: _loading ? null : _entrarComGoogle,
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.borderMid),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: Colors.white.withValues(alpha: 0.1),
+          side: const BorderSide(color: Colors.white24),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(width: 20, height: 20, child: CustomPaint(painter: GoogleLogoPainter())),
+            SizedBox(
+                width: 20,
+                height: 20,
+                child: CustomPaint(painter: GoogleLogoPainter())),
             const SizedBox(width: 12),
-            Text('Entrar com Google', style: AppTextStyles.labelLarge.copyWith(color: Colors.white, fontSize: 14)),
+            Text('Entrar com Google',
+                style: AppTextStyles.labelLarge
+                    .copyWith(color: Colors.white, fontSize: 14)),
           ],
         ),
       ),
@@ -349,10 +472,16 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
         onPressed: _alternarModo,
         child: RichText(
           text: TextSpan(
-            style: AppTextStyles.bodyMedium,
+            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
             children: [
-              TextSpan(text: _modo == _Modo.login ? 'Não tem uma conta? ' : 'Já tem uma conta? '),
-              TextSpan(text: _modo == _Modo.login ? 'Criar agora' : 'Entrar', style: const TextStyle(color: AppColors.blueLt, fontWeight: FontWeight.bold)),
+              TextSpan(
+                  text: _modo == _Modo.login
+                      ? 'Não tem uma conta? '
+                      : 'Já tem uma conta? '),
+              TextSpan(
+                  text: _modo == _Modo.login ? 'Criar agora' : 'Entrar',
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -363,7 +492,8 @@ class _LoginCidadaoScreenState extends State<LoginCidadaoScreen> {
 
 class _CpfFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue old, TextEditingValue neo) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue old, TextEditingValue neo) {
     var t = neo.text.replaceAll(RegExp(r'\D'), '');
     if (t.length > 11) t = t.substring(0, 11);
     final b = StringBuffer();
@@ -373,13 +503,15 @@ class _CpfFormatter extends TextInputFormatter {
       b.write(t[i]);
     }
     final s = b.toString();
-    return TextEditingValue(text: s, selection: TextSelection.collapsed(offset: s.length));
+    return TextEditingValue(
+        text: s, selection: TextSelection.collapsed(offset: s.length));
   }
 }
 
 class _TelefoneFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue old, TextEditingValue neo) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue old, TextEditingValue neo) {
     var t = neo.text.replaceAll(RegExp(r'\D'), '');
     if (t.length > 11) t = t.substring(0, 11);
     final b = StringBuffer();
@@ -390,6 +522,7 @@ class _TelefoneFormatter extends TextInputFormatter {
       b.write(t[i]);
     }
     final s = b.toString();
-    return TextEditingValue(text: s, selection: TextSelection.collapsed(offset: s.length));
+    return TextEditingValue(
+        text: s, selection: TextSelection.collapsed(offset: s.length));
   }
 }

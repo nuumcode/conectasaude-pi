@@ -22,7 +22,7 @@ class ArcRingPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5
         ..shader = const SweepGradient(
-          colors: [AppColors.blueLt, AppColors.greenLt, Colors.transparent],
+          colors: [AppColors.blueLt, AppColors.accent, Colors.transparent],
           stops: [0, 0.55, 1],
           startAngle: 0,
           endAngle: math.pi * 2,
@@ -235,7 +235,7 @@ class DotGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size s) {
     final p = Paint()
-      ..color = Colors.white
+      ..color = AppColors.textPrimary.withOpacity(0.05)
       ..style = PaintingStyle.fill;
     for (double x = 40; x < s.width; x += 40)
       for (double y = 40; y < s.height; y += 40) {
@@ -288,7 +288,7 @@ class GoogleLogoPainter extends CustomPainter {
 
 /// Animação de entrada (Fade + Slide) padronizada.
 /// Ideal para cards, botões e campos de formulário.
-class AppEntrance extends StatelessWidget {
+class AppEntrance extends StatefulWidget {
   final Widget child;
   final int index;
   final Duration delay;
@@ -305,29 +305,44 @@ class AppEntrance extends StatelessWidget {
   });
 
   @override
+  State<AppEntrance> createState() => _AppEntranceState();
+}
+
+class _AppEntranceState extends State<AppEntrance> {
+  bool _canShow = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.delay == Duration.zero) {
+      _canShow = true;
+    } else {
+      Future.delayed(widget.delay, () {
+        if (mounted) setState(() => _canShow = true);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: Future.delayed(delay),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return Opacity(opacity: 0, child: child);
-        }
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 650),
-          curve: curve,
-          builder: (context, value, child) {
-            return Opacity(
-              opacity: value,
-              child: Transform.translate(
-                offset: Offset.lerp(offset, Offset.zero, value)!,
-                child: child,
-              ),
-            );
-          },
-          child: child,
+    if (!_canShow) {
+      return Opacity(opacity: 0, child: widget.child);
+    }
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 650),
+      curve: widget.curve,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset.lerp(widget.offset, Offset.zero, value)!,
+            child: child,
+          ),
         );
       },
+      child: widget.child,
     );
   }
 }
@@ -371,53 +386,75 @@ class AppBackground extends StatelessWidget {
     final sz = MediaQuery.of(context).size;
     return Container(
       decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment(0, -0.4),
-          radius: 1.4,
-          colors: [AppColors.bgMid, AppColors.navyDeep],
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF061030), // Navy Deep
+            Color(0xFF0D2B6B), // Deep Blue
+            Color(0xFF1565DB), // Sophisticated Blue
+          ],
+          stops: [0.0, 0.4, 1.0],
         ),
       ),
       child: Stack(children: [
         // Static decorative elements in a RepaintBoundary
         RepaintBoundary(
           child: Stack(children: [
+            // Light Orbs
             Positioned(
                 top: -sz.height * .12,
                 right: -sz.width * .18,
                 child:
-                    AppOrb(size: 320, color: AppColors.blue.withValues(alpha: .13))),
+                    AppOrb(size: 400, color: const Color(0xFF4CA3FF).withValues(alpha: .08))),
             Positioned(
                 top: sz.height * .06,
                 left: -sz.width * .10,
                 child: AppOrb(
-                    size: 200, color: AppColors.blueLt.withValues(alpha: .09))),
+                    size: 250, color: const Color(0xFF00D4AA).withValues(alpha: .05))),
             Positioned(
-                bottom: -sz.height * .08,
-                left: -sz.width * .14,
+                bottom: -sz.height * .10,
+                left: -sz.width * .15,
                 child: AppOrb(
-                    size: 260, color: AppColors.greenLt.withValues(alpha: .09))),
+                    size: 350, color: const Color(0xFF1A72FF).withValues(alpha: .10))),
+
+            // ECG Background (Index style)
             Positioned(
-                bottom: 32,
-                right: 18,
+              bottom: sz.height * 0.15,
+              left: 0,
+              right: 0,
+              child: Opacity(
+                opacity: 0.05,
+                child: CustomPaint(
+                  size: Size(sz.width, 80),
+                  painter: _EcgLinePainter(),
+                ),
+              ),
+            ),
+
+            // Decorative Painters
+            Positioned(
+                bottom: 40,
+                right: 24,
                 child: Opacity(
-                    opacity: .09,
+                    opacity: .08,
                     child: CustomPaint(
-                        size: const Size(100, 100),
+                        size: const Size(120, 120),
                         painter: CircleEcgPainter()))),
             Positioned(
-                bottom: 64,
-                left: -22,
+                bottom: 80,
+                left: -20,
                 child: Opacity(
-                    opacity: .07,
+                    opacity: .06,
                     child: CustomPaint(
-                        size: const Size(90, 90), painter: ArcDecoPainter()))),
+                        size: const Size(100, 100), painter: ArcDecoPainter()))),
             Positioned.fill(
                 child: Opacity(
-                    opacity: .07,
+                    opacity: .08,
                     child: CustomPaint(painter: CornerCrossesPainter()))),
             Positioned.fill(
                 child: Opacity(
-                    opacity: .025,
+                    opacity: .04,
                     child: CustomPaint(painter: DotGridPainter()))),
           ]),
         ),
@@ -425,6 +462,42 @@ class AppBackground extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// Painter for the Index-style ECG line
+class _EcgLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF8CC6FF)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final path = Path();
+    final w = size.width;
+    final h = size.height / 2;
+
+    // Pattern roughly matching index.html
+    double x = 0;
+    path.moveTo(0, h);
+    
+    while (x < w) {
+      path.lineTo(x + 100, h);
+      path.lineTo(x + 130, h - 20);
+      path.lineTo(x + 150, h + 25);
+      path.lineTo(x + 170, h - 35);
+      path.lineTo(x + 190, h + 30);
+      path.lineTo(x + 210, h);
+      x += 350;
+    }
+    
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
 }
 
 /// Linha gradiente no topo
@@ -440,7 +513,7 @@ class AppTopLine extends StatelessWidget {
             colors: [
               Colors.transparent,
               AppColors.blue,
-              AppColors.greenLt,
+              AppColors.accent,
               Colors.transparent,
             ],
             stops: [0, 0.3, 0.7, 1],

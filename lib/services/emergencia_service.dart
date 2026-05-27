@@ -1,7 +1,7 @@
 // lib/services/emergencia_service.dart
 //
 // Serviço de emergência conectado ao Cloud Firestore.
-// Gerencia solicitações de SOS em tempo real.
+// Gerencia solicitações de SOS estruturadas em tempo real.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -28,6 +28,9 @@ class EmergenciaRequest {
   final String userId;
   final String userName;
   final String userPhone;
+  final String categoria;
+  final String descricao;
+  final String endereco;
   final StatusEmergencia status;
   final DateTime createdAt;
   final GeoPoint? location;
@@ -37,6 +40,9 @@ class EmergenciaRequest {
     required this.userId,
     required this.userName,
     required this.userPhone,
+    required this.categoria,
+    required this.descricao,
+    required this.endereco,
     required this.status,
     required this.createdAt,
     this.location,
@@ -49,6 +55,9 @@ class EmergenciaRequest {
       userId: d['userId'] ?? '',
       userName: d['userName'] ?? 'Desconhecido',
       userPhone: d['userPhone'] ?? '',
+      categoria: d['categoria'] ?? 'Geral',
+      descricao: d['descricao'] ?? '',
+      endereco: d['endereco'] ?? 'Endereço não informado',
       status: StatusEmergenciaX.fromString(d['status'] ?? 'aguardando'),
       createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       location: d['location'] as GeoPoint?,
@@ -71,18 +80,25 @@ class EmergenciaService {
   CollectionReference<Map<String, dynamic>> get _emergenciasRef =>
       _db.collection('emergencias');
 
-  /// O cidadão solicita socorro.
+  /// O cidadão solicita socorro com informações estruturadas.
   Future<String> solicitarSocorro({
     required String userId,
     required String userName,
     String userPhone = '',
+    required String categoria,
+    required String descricao,
+    required String endereco,
     GeoPoint? location,
   }) async {
+    // FIX: Garantir que o campo status seja salvo exatamente como a query do Posto espera.
     final docRef = await _emergenciasRef.add({
       'userId': userId,
       'userName': userName,
       'userPhone': userPhone,
-      'status': StatusEmergencia.aguardando.value,
+      'categoria': categoria,
+      'descricao': descricao,
+      'endereco': endereco,
+      'status': StatusEmergencia.aguardando.value, // 'aguardando'
       'createdAt': FieldValue.serverTimestamp(),
       'location': location,
     });
@@ -91,14 +107,20 @@ class EmergenciaService {
 
   /// Stream de solicitações ativas para o Posto.
   Stream<List<EmergenciaRequest>> streamEmergenciasAtivas() {
+    // FIX: Removido orderBy temporariamente para testar se o problema é falta de índice
+    // ou inconsistência no campo status.
     return _emergenciasRef
         .where('status', whereIn: [
           StatusEmergencia.aguardando.value,
           StatusEmergencia.emAtendimento.value,
         ])
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(EmergenciaRequest.fromDoc).toList());
+        .map((snap) {
+          final list = snap.docs.map(EmergenciaRequest.fromDoc).toList();
+          // Ordenar manualmente no app até o índice ser criado no Firestore se necessário
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
   }
 
   /// Stream da emergência atual do usuário.

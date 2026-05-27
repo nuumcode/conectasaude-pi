@@ -1,12 +1,5 @@
-// ═══════════════════════════════════════════════════════════════════
-//  cidadao_escala_screen.dart  —  ConectaSaúdePI
-//
-//  ✅ Usa AppDrawer + AppHeader (mesmo padrão do HomeCidadaoScreen)
-//  ✅ Drawer mobile / Drawer fixo desktop
-//  ✅ BottomNav mobile com navegação entre telas
-//  ✅ Conteúdo de Escala Médica preservado dentro do layout reutilizável
-// ═══════════════════════════════════════════════════════════════════
 import 'package:conecta_saude_pi/features/cidadao/cidadao_fila_screen.dart';
+import 'package:conecta_saude_pi/features/cidadao/cidadao_emergencia_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/perfil_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,7 +18,6 @@ class CidadaoEscalaScreen extends StatefulWidget {
 }
 
 class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
-  // ── Layout / scaffold ──────────────────────────────────────────
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   static const _abaDestaScreen = DrawerAba.agendamentos;
   User? get _user => FirebaseAuth.instance.currentUser;
@@ -34,19 +26,9 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
     return name.split(' ').first;
   }
 
-  // ── Estado da escala ───────────────────────────────────────────
   final _searchCtrl = TextEditingController();
   int _filtroSelecionado = 0;
-  // Paleta local (mantida do design original)
-  static const _kPrimary = Color(0xFF1565D8);
-  static const _kBg = Color(0xFFF0F5FF);
-  static const _kCardBg = Colors.white;
-  static const _kTextPrimary = Color(0xFF1E293B);
-  static const _kTextSecondary = Color(0xFF64748B);
-  static const _kDivider = Color(0xFFE2E8F0);
-  static const _kStar = Color(0xFFFFC107);
-  static const _kGreen = Color(0xFF10B981);
-  static const _kRed = Color(0xFFEF4444);
+
   final _filtros = [
     'Especialidade',
     'Localização',
@@ -128,7 +110,6 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
     super.dispose();
   }
 
-  // ── Logout ──────────────────────────────────────────────────────
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
     try {
@@ -140,22 +121,14 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
     );
   }
 
-  // ── Navegação ───────────────────────────────────────────────────
   void _onAbaChanged(dynamic aba) {
     if (aba == _abaDestaScreen) return;
     final Widget? destino = _resolverAba(aba);
     if (destino != null) {
       Navigator.of(context).pushReplacement(AppFadeRoute(page: destino));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Em breve.'),
-        duration: Duration(seconds: 1),
-      ));
     }
   }
 
-  /// Mapeia qualquer [DrawerAba] para a tela correspondente.
-  /// Retorna null para abas ainda não implementadas.
   Widget? _resolverAba(dynamic aba) {
     switch (aba) {
       case DrawerAba.inicio:
@@ -164,27 +137,22 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
         return const CidadaoEscalaScreen();
       case DrawerAba.fila:
         return const CidadaoFilaScreen();
+      case DrawerAba.emergencia:
+        return const CidadaoEmergenciaScreen();
       case DrawerAba.perfil:
         return const PerfilScreen();
-      // Abas futuras — adicione aqui quando as telas existirem:
-      // case DrawerAba.prontuarios:   return const CidadaoProntuariosScreen();
-      // case DrawerAba.vacinacao:     return const CidadaoVacinacaoScreen();
-      // case DrawerAba.mensagens:     return const CidadaoMensagensScreen();
-      // case DrawerAba.notificacoes:  return const CidadaoNotificacoesScreen();
-      // case DrawerAba.emergencia:    return const CidadaoEmergenciaScreen();
       default:
         return null;
     }
   }
 
-  // ── Build ───────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final isDesktop = w >= 700;
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: AppColors.bgBase,
       drawer: isDesktop
           ? null
           : AppDrawer(
@@ -214,7 +182,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
           isFixed: true,
         ),
       ),
-      Container(width: 1, color: const Color(0xFFE2E8F0)),
+      Container(width: 1, color: AppColors.borderDim),
       Expanded(
         child: Column(children: [
           AppHeader(
@@ -246,24 +214,24 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
   Widget _buildBottomNav() {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+        color: AppColors.bgBase,
+        border: Border(top: BorderSide(color: AppColors.borderDim)),
       ),
       child: BottomNavigationBar(
-        currentIndex: 1, // Agendamentos
+        currentIndex: 1,
         onTap: (i) {
           const mapa = [
             DrawerAba.inicio,
             DrawerAba.agendamentos,
-            DrawerAba.prontuarios,
-            DrawerAba.mensagens,
-            DrawerAba.mais,
+            DrawerAba.fila,
+            DrawerAba.emergencia,
+            DrawerAba.perfil,
           ];
           _onAbaChanged(mapa[i]);
         },
-        backgroundColor: Colors.white,
-        selectedItemColor: AppColors.bgMid,
-        unselectedItemColor: const Color(0xFF94A3B8),
+        backgroundColor: AppColors.bgBase,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textTertiary,
         selectedLabelStyle: const TextStyle(
             fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600),
         unselectedLabelStyle:
@@ -274,29 +242,25 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
           BottomNavigationBarItem(
               icon: Icon(Icons.home_rounded), label: 'Início'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today_rounded), label: 'Agendamentos'),
+              icon: Icon(Icons.calendar_today_rounded), label: 'Agendas'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.folder_outlined), label: 'Prontuários'),
+              icon: Icon(Icons.groups_rounded), label: 'Fila'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline_rounded),
-              label: 'Mensagens'),
+              icon: Icon(Icons.emergency_rounded), label: 'SOS'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.menu_rounded), label: 'Mais'),
+              icon: Icon(Icons.person_rounded), label: 'Perfil'),
         ],
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  Conteúdo (preserva a UI original)
-  // ═══════════════════════════════════════════════════════════════
   Widget _buildConteudo() {
     final width = MediaQuery.of(context).size.width;
     final isSmall = width < 360;
     final crossCount = width >= 600 ? 3 : 2;
     final hPad = isSmall ? 14.0 : 16.0;
     return Container(
-      color: _kBg,
+      color: AppColors.bgBase,
       child: Column(
         children: [
           _buildTituloEFiltros(isSmall, hPad),
@@ -325,15 +289,9 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(hPad, 16, hPad, 14),
-      decoration: BoxDecoration(
-        color: _kCardBg,
-        boxShadow: [
-          BoxShadow(
-            color: _kPrimary.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+      decoration: const BoxDecoration(
+        color: AppColors.bgBase,
+        border: Border(bottom: BorderSide(color: AppColors.borderDim)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,11 +301,11 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: _kPrimary.withOpacity(0.10),
+                color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.calendar_month_rounded,
-                  color: _kPrimary, size: 20),
+                  color: AppColors.primary, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -357,7 +315,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
                   fontFamily: 'Poppins',
                   fontSize: isSmall ? 18 : 20,
                   fontWeight: FontWeight.w800,
-                  color: _kTextPrimary,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),
@@ -375,9 +333,9 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: _kBg,
+        color: AppColors.bgBase,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _kDivider),
+        border: Border.all(color: AppColors.borderDim),
       ),
       child: Row(
         children: [
@@ -386,18 +344,21 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
               controller: _searchCtrl,
               onChanged: (_) => setState(() {}),
               style: const TextStyle(
-                  fontFamily: 'Poppins', fontSize: 13, color: _kTextPrimary),
+                  fontFamily: 'Poppins', fontSize: 13, color: AppColors.textPrimary),
               decoration: const InputDecoration(
-                hintText: 'Buscar por nome, especialidade ou clínica',
+                hintText: 'Buscar profissional...',
                 hintStyle: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 12,
-                    color: _kTextSecondary),
+                    color: AppColors.textTertiary),
                 prefixIcon: Icon(Icons.search_rounded,
-                    size: 20, color: _kTextSecondary),
+                    size: 20, color: AppColors.textTertiary),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                filled: false,
               ),
             ),
           ),
@@ -405,24 +366,13 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
             height: 44,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: const BoxDecoration(
-              color: _kPrimary,
+              color: AppColors.primary,
               borderRadius: BorderRadius.only(
                 topRight: Radius.circular(12),
                 bottomRight: Radius.circular(12),
               ),
             ),
-            child: const Row(
-              children: [
-                Icon(Icons.tune_rounded, size: 16, color: Colors.white),
-                SizedBox(width: 6),
-                Text('Filtrar',
-                    style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white)),
-              ],
-            ),
+            child: const Icon(Icons.tune_rounded, size: 18, color: Colors.white),
           ),
         ],
       ),
@@ -445,9 +395,9 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  color: sel ? _kPrimary : Colors.white,
+                  color: sel ? AppColors.primary : AppColors.bgBase,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: sel ? _kPrimary : _kDivider),
+                  border: Border.all(color: sel ? AppColors.primary : AppColors.borderDim),
                 ),
                 child: Text(
                   _filtros[i],
@@ -455,7 +405,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
                     fontFamily: 'Poppins',
                     fontSize: 11,
                     fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
-                    color: sel ? Colors.white : _kTextSecondary,
+                    color: sel ? Colors.white : AppColors.textSecondary,
                   ),
                 ),
               ),
@@ -471,17 +421,9 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       onTap: prof.disponivel ? () => _openAgendamento(prof) : null,
       child: Container(
         decoration: BoxDecoration(
-          color: _kCardBg,
+          color: AppColors.bgBase,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-              color: prof.disponivel ? _kPrimary.withOpacity(0.12) : _kDivider),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          border: Border.all(color: AppColors.borderDim),
         ),
         child: Column(
           children: [
@@ -489,16 +431,9 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
               flex: 5,
               child: Container(
                 width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      _kPrimary.withOpacity(0.08),
-                      _kPrimary.withOpacity(0.03)
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: const BorderRadius.only(
+                decoration: const BoxDecoration(
+                  color: AppColors.bgBase,
+                  borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(14),
                     topRight: Radius.circular(14),
                   ),
@@ -507,7 +442,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
                   children: [
                     Center(
                       child: Icon(Icons.person_rounded,
-                          size: 52, color: _kPrimary.withOpacity(0.4)),
+                          size: 52, color: AppColors.primary.withOpacity(0.2)),
                     ),
                     Positioned(
                       top: 8,
@@ -517,15 +452,8 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
                         height: 10,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: prof.disponivel ? _kGreen : _kRed,
-                          border: Border.all(color: Colors.white, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (prof.disponivel ? _kGreen : _kRed)
-                                  .withOpacity(0.4),
-                              blurRadius: 4,
-                            ),
-                          ],
+                          color: prof.disponivel ? AppColors.success : AppColors.error,
+                          border: Border.all(color: AppColors.bgBase, width: 2),
                         ),
                       ),
                     ),
@@ -536,7 +464,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
             Expanded(
               flex: 4,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -546,44 +474,24 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
                         fontFamily: 'Poppins',
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: _kTextPrimary,
+                        color: AppColors.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
                     Text(
                       prof.especialidade,
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
-                        color: _kPrimary,
+                        color: AppColors.primary,
                       ),
-                    ),
-                    Text(
-                      prof.clinica,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 9,
-                        color: _kTextSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const Spacer(),
                     Row(
                       children: [
-                        ...List.generate(5, (i) {
-                          final filled = i < prof.rating.floor();
-                          return Icon(
-                            filled
-                                ? Icons.star_rounded
-                                : Icons.star_outline_rounded,
-                            size: 12,
-                            color: _kStar,
-                          );
-                        }),
+                        const Icon(Icons.star_rounded, size: 12, color: AppColors.warning),
                         const SizedBox(width: 3),
                         Text(
                           '${prof.rating}',
@@ -591,30 +499,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
                               fontFamily: 'Poppins',
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: _kTextPrimary),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: prof.disponivel ? _kGreen : _kRed,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          prof.disponivel ? 'Online' : 'Offline',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 9,
-                            fontWeight: FontWeight.w500,
-                            color: prof.disponivel ? _kGreen : _kRed,
-                          ),
+                              color: AppColors.textPrimary),
                         ),
                       ],
                     ),
@@ -638,33 +523,19 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
   }
 
   Widget _buildEmpty() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: _kPrimary.withOpacity(0.05),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.search_off_rounded,
-                size: 48, color: _kPrimary.withOpacity(0.4)),
-          ),
-          const SizedBox(height: 16),
-          const Text(
+          Icon(Icons.search_off_rounded, size: 48, color: AppColors.textTertiary),
+          SizedBox(height: 16),
+          Text(
             'Nenhum profissional encontrado',
             style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: _kTextPrimary),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Tente buscar com outros termos',
-            style: TextStyle(
-                fontFamily: 'Poppins', fontSize: 12, color: _kTextSecondary),
+                color: AppColors.textPrimary),
           ),
         ],
       ),
@@ -672,9 +543,6 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-//  Bottom Sheet — Agendar Consulta (preservado do original)
-// ─────────────────────────────────────────────────────────────
 class _AgendamentoSheet extends StatefulWidget {
   final _Profissional profissional;
   const _AgendamentoSheet({required this.profissional});
@@ -683,31 +551,12 @@ class _AgendamentoSheet extends StatefulWidget {
 }
 
 class _AgendamentoSheetState extends State<_AgendamentoSheet> {
-  static const _kPrimary = Color(0xFF1565D8);
-  static const _kPrimaryDark = Color(0xFF0D47A1);
-  static const _kBg = Color(0xFFF0F5FF);
-  static const _kTextPrimary = Color(0xFF1E293B);
-  static const _kTextSecondary = Color(0xFF64748B);
-  static const _kDivider = Color(0xFFE2E8F0);
-  static const _kGreen = Color(0xFF10B981);
-  DateTime _selectedDate = DateTime.now();
-  int _selectedMonth = DateTime.now().month;
-  int _selectedYear = DateTime.now().year;
   String? _selectedTime;
-  String _tipoConsulta = 'Consulta';
   final _motivoCtrl = TextEditingController();
   final _horarios = [
-    '09:00',
-    '10:00',
-    '11:00',
-    '12:00',
-    '13:00',
-    '14:00',
-    '15:00',
-    '16:00',
-    '17:00'
+    '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'
   ];
-  final _diasDisponiveis = [3, 5, 7, 10, 12, 14, 17, 19, 21, 24, 26, 28];
+  
   @override
   void dispose() {
     _motivoCtrl.dispose();
@@ -720,7 +569,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
     return Container(
       height: height * 0.92,
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.bgBase,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -731,24 +580,16 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
           _buildSheetHeader(),
           Expanded(
             child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildStepSection(
-                      1, 'Selecionar Médico', _buildMedicoSelected()),
-                  const SizedBox(height: 20),
-                  _buildStepSection(2, 'Selecionar Data', _buildCalendar()),
-                  const SizedBox(height: 20),
-                  _buildStepSection(3, 'Selecionar Horário', _buildHorarios()),
-                  const SizedBox(height: 20),
-                  _buildStepSection(
-                      4, 'Tipo de Consulta', _buildTipoConsulta()),
-                  const SizedBox(height: 20),
-                  _buildStepSection(
-                      5, 'Descrição / Motivo da Consulta', _buildMotivo()),
-                  const SizedBox(height: 28),
+                  _buildMedicoSelected(),
+                  const SizedBox(height: 24),
+                  _buildCalendar(),
+                  const SizedBox(height: 24),
+                  _buildHorarios(),
+                  const SizedBox(height: 24),
                   _buildActionButtons(),
                 ],
               ),
@@ -763,11 +604,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [_kPrimary, _kPrimaryDark],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
+        color: AppColors.primary,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -780,7 +617,7 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
             height: 4,
             margin: const EdgeInsets.only(bottom: 14),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withOpacity(0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -788,19 +625,16 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
             children: [
               GestureDetector(
                 onTap: () => Navigator.pop(context),
-                child: const Icon(Icons.arrow_back_ios_rounded,
-                    size: 18, color: Colors.white),
+                child: const Icon(Icons.close, color: Colors.white),
               ),
               const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Agendar Consulta',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+              const Text(
+                'Agendar Consulta',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -810,406 +644,90 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
     );
   }
 
-  Widget _buildStepSection(int step, String title, Widget content) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: const BoxDecoration(
-                color: _kPrimary,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  '$step',
-                  style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: _kTextPrimary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.only(left: 34),
-          child: content,
-        ),
-      ],
-    );
-  }
-
   Widget _buildMedicoSelected() {
-    final prof = widget.profissional;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _kPrimary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _kPrimary.withOpacity(0.2)),
+        color: AppColors.bgBase,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderDim),
       ),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _kPrimary.withOpacity(0.1),
-            ),
-            child: const Icon(Icons.person_rounded, size: 22, color: _kPrimary),
+          const CircleAvatar(
+            backgroundColor: AppColors.surfaceDim,
+            child: Icon(Icons.person, color: AppColors.primary),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  prof.nome,
-                  style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: _kTextPrimary),
-                ),
-                Text(
-                  '${prof.especialidade} • ${prof.clinica}',
-                  style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 11,
-                      color: _kTextSecondary),
-                ),
+                Text(widget.profissional.nome, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                Text(widget.profissional.especialidade, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
           ),
-          const Icon(Icons.check_circle, size: 20, color: _kGreen),
         ],
       ),
     );
   }
 
   Widget _buildCalendar() {
-    final daysInMonth = DateUtils.getDaysInMonth(_selectedYear, _selectedMonth);
-    final firstWeekday = DateTime(_selectedYear, _selectedMonth, 1).weekday;
-    final monthNames = [
-      '',
-      'Janeiro',
-      'Fevereiro',
-      'Março',
-      'Abril',
-      'Maio',
-      'Junho',
-      'Julho',
-      'Agosto',
-      'Setembro',
-      'Outubro',
-      'Novembro',
-      'Dezembro'
-    ];
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _kBg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _kDivider),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    if (_selectedMonth == 1) {
-                      _selectedMonth = 12;
-                      _selectedYear--;
-                    } else {
-                      _selectedMonth--;
-                    }
-                  });
-                },
-                child: const Icon(Icons.chevron_left_rounded,
-                    color: _kPrimary, size: 22),
-              ),
-              Text(
-                '${monthNames[_selectedMonth]} $_selectedYear',
-                style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _kTextPrimary),
-              ),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    if (_selectedMonth == 12) {
-                      _selectedMonth = 1;
-                      _selectedYear++;
-                    } else {
-                      _selectedMonth++;
-                    }
-                  });
-                },
-                child: const Icon(Icons.chevron_right_rounded,
-                    color: _kPrimary, size: 22),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Selecione a Data', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.bgBase,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderDim),
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
-                .map((d) => SizedBox(
-                      width: 32,
-                      child: Text(d,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                              color: _kTextSecondary)),
-                    ))
-                .toList(),
-          ),
-          const SizedBox(height: 8),
-          ...List.generate(6, (week) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(7, (dayOfWeek) {
-                  final dayIndex = week * 7 + dayOfWeek - (firstWeekday - 1);
-                  if (dayIndex < 1 || dayIndex > daysInMonth) {
-                    return const SizedBox(width: 32, height: 32);
-                  }
-                  final isSelected = _selectedDate.day == dayIndex &&
-                      _selectedDate.month == _selectedMonth &&
-                      _selectedDate.year == _selectedYear;
-                  final isAvailable = _diasDisponiveis.contains(dayIndex);
-                  final isToday = dayIndex == DateTime.now().day &&
-                      _selectedMonth == DateTime.now().month &&
-                      _selectedYear == DateTime.now().year;
-                  return GestureDetector(
-                    onTap: isAvailable
-                        ? () => setState(() => _selectedDate =
-                            DateTime(_selectedYear, _selectedMonth, dayIndex))
-                        : null,
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? _kPrimary
-                            : isToday
-                                ? _kPrimary.withOpacity(0.1)
-                                : null,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$dayIndex',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 11,
-                            fontWeight: isSelected || isToday
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                            color: isSelected
-                                ? Colors.white
-                                : !isAvailable
-                                    ? _kTextSecondary.withOpacity(0.4)
-                                    : _kTextPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            );
-          }),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                      color: _kPrimary,
-                      borderRadius: BorderRadius.circular(2))),
-              const SizedBox(width: 6),
-              const Text('Dias disponíveis',
-                  style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 10,
-                      color: _kTextSecondary)),
-            ],
-          ),
-        ],
-      ),
+          child: const Center(child: Text('Calendário de Disponibilidade', style: TextStyle(color: AppColors.textSecondary))),
+        ),
+      ],
     );
   }
 
   Widget _buildHorarios() {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: _horarios.map((h) {
-        final sel = _selectedTime == h;
-        return GestureDetector(
-          onTap: () => setState(() => _selectedTime = h),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: sel ? _kPrimary : Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: sel ? _kPrimary : _kDivider),
-              boxShadow: sel
-                  ? [
-                      BoxShadow(
-                          color: _kPrimary.withOpacity(0.2),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2))
-                    ]
-                  : null,
-            ),
-            child: Text(
-              h,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 12,
-                fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
-                color: sel ? Colors.white : _kTextPrimary,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Selecione o Horário', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _horarios.map((h) {
+            final sel = _selectedTime == h;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedTime = h),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: sel ? AppColors.primary : AppColors.bgBase,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: sel ? AppColors.primary : AppColors.borderDim),
+                ),
+                child: Text(h, style: TextStyle(color: sel ? Colors.white : AppColors.textPrimary, fontWeight: sel ? FontWeight.bold : FontWeight.normal)),
               ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildTipoConsulta() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _kDivider),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _tipoConsulta,
-          isExpanded: true,
-          dropdownColor: Colors.white,
-          style: const TextStyle(
-              fontFamily: 'Poppins', fontSize: 13, color: _kTextPrimary),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded,
-              color: _kTextSecondary),
-          items: ['Consulta', 'Retorno', 'Exame', 'Emergência']
-              .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-              .toList(),
-          onChanged: (v) => setState(() => _tipoConsulta = v!),
+            );
+          }).toList(),
         ),
-      ),
-    );
-  }
-
-  Widget _buildMotivo() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _kDivider),
-      ),
-      child: TextField(
-        controller: _motivoCtrl,
-        maxLines: 3,
-        style: const TextStyle(
-            fontFamily: 'Poppins', fontSize: 13, color: _kTextPrimary),
-        decoration: const InputDecoration(
-          hintText: 'Descreva o motivo da consulta...',
-          hintStyle: TextStyle(
-              fontFamily: 'Poppins', fontSize: 12, color: _kTextSecondary),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.all(14),
-        ),
-      ),
+      ],
     );
   }
 
   Widget _buildActionButtons() {
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Consulta agendada com sucesso!',
-                      style: TextStyle(fontFamily: 'Poppins')),
-                  backgroundColor: _kGreen,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _kPrimary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              elevation: 0,
-            ),
-            icon: const Icon(Icons.calendar_month_rounded, size: 18),
-            label: const Text('Agendar',
-                style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600)),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: OutlinedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: _kTextSecondary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              side: const BorderSide(color: _kDivider),
-            ),
-            icon: const Icon(Icons.close_rounded, size: 18),
-            label: const Text('Cancelar',
-                style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600)),
-          ),
-        ),
-      ],
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Consulta agendada!'), backgroundColor: AppColors.success));
+      },
+      child: const Text('CONFIRMAR AGENDAMENTO'),
     );
   }
 }
