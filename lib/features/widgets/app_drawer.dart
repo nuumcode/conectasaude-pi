@@ -136,13 +136,13 @@ class AppDrawer extends StatelessWidget {
       _buildItem(
         context,
         icon: Icons.calendar_today_rounded,
-        label: 'Agendamentos',
+        label: 'Escala Médica',
         aba: DrawerAba.agendamentos,
       ),
       _buildItem(
         context,
         icon: Icons.groups_rounded,
-        label: 'Fila Virtual',
+        label: 'Agendamentos',
         aba: DrawerAba.fila,
       ),
       _buildItem(

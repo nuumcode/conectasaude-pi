@@ -8,6 +8,7 @@ import 'package:conecta_saude_pi/features/auth/login_cidadao_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/dashboard_cidadao.dart';
 import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
 import 'package:conecta_saude_pi/features/widgets/app_header.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
 
@@ -21,104 +22,90 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   static const _abaDestaScreen = DrawerAba.agendamentos;
   User? get _user => FirebaseAuth.instance.currentUser;
-  String get _firstName {
-    final name = _user?.displayName ?? _user?.email ?? 'Usuário';
-    return name.split(' ').first;
-  }
-
+  
+  DateTime _selectedDate = DateTime.now();
   final _searchCtrl = TextEditingController();
-  int _filtroSelecionado = 0;
 
-  final _filtros = [
-    'Especialidade',
-    'Localização',
-    'Avaliação',
-    'Disponibilidade'
-  ];
   final _profissionais = <_Profissional>[
     _Profissional(
-      nome: 'Dra. Ana Clar',
+      nome: 'Dr. Ricardo Silva',
       especialidade: 'Clínica Geral',
-      clinica: 'Clínica Bem Estar',
+      clinica: 'UBS Novo Oriente',
       rating: 4.9,
-      totalAvaliacoes: 128,
+      totalAvaliacoes: 450,
       disponivel: true,
+      diasTrabalho: [1, 3, 5], // Seg, Qua, Sex
+      horario: '08:00 - 17:00',
+      foto: null,
+      experiencia: '15 anos de experiência em saúde da família.',
     ),
     _Profissional(
-      nome: 'Dr. João Rica',
+      nome: 'Dra. Beatriz Santos',
+      especialidade: 'Pediatra',
+      clinica: 'UBS Novo Oriente',
+      rating: 4.8,
+      totalAvaliacoes: 320,
+      disponivel: true,
+      diasTrabalho: [2, 4], // Ter, Qui
+      horario: '07:00 - 13:00',
+      foto: null,
+      experiencia: 'Especialista em desenvolvimento infantil.',
+    ),
+    _Profissional(
+      nome: 'Dr. Marcos Oliveira',
       especialidade: 'Cardiologista',
-      clinica: 'Instituto do Coração',
+      clinica: 'UBS Novo Oriente',
       rating: 4.7,
-      totalAvaliacoes: 86,
-      disponivel: false,
+      totalAvaliacoes: 180,
+      disponivel: true,
+      diasTrabalho: [3], // Quarta
+      horario: '13:00 - 19:00',
+      foto: null,
+      experiencia: 'Mestre em cardiologia preventiva.',
     ),
     _Profissional(
-      nome: 'Dra. Mariana',
-      especialidade: 'Pediatra',
-      clinica: 'Clínica Infantil',
+      nome: 'Dra. Ana Costa',
+      especialidade: 'Ginecologista',
+      clinica: 'UBS Santa Maria',
       rating: 4.9,
-      totalAvaliacoes: 153,
+      totalAvaliacoes: 290,
       disponivel: true,
+      diasTrabalho: [1, 2, 3, 4, 5],
+      horario: '08:00 - 17:00',
+      foto: null,
+      experiencia: 'Atendimento humanizado à mulher.',
     ),
     _Profissional(
-      nome: 'Dra. Marvana O',
-      especialidade: 'Pediatra',
-      clinica: 'Clínica Infantil Feliz',
-      rating: 4.8,
-      totalAvaliacoes: 99,
-      disponivel: true,
-    ),
-    _Profissional(
-      nome: 'Dr. Paulo',
+      nome: 'Dr. João Pereira',
       especialidade: 'Ortopedista',
-      clinica: 'OrtoPrime Clínica',
+      clinica: 'UBS Parque Brasil',
       rating: 4.6,
-      totalAvaliacoes: 72,
-      disponivel: false,
-    ),
-    _Profissional(
-      nome: 'Dra. Fernanda',
-      especialidade: 'Dermatologista',
-      clinica: 'Clínica Derma & Saúde',
-      rating: 4.8,
-      totalAvaliacoes: 110,
+      totalAvaliacoes: 150,
       disponivel: true,
-    ),
-    _Profissional(
-      nome: 'Dra. Fernanda A',
-      especialidade: 'Clínica Geral',
-      clinica: 'Clínica Derma & Saúde',
-      rating: 4.7,
-      totalAvaliacoes: 95,
-      disponivel: true,
+      diasTrabalho: [5], // Sexta
+      horario: '08:00 - 12:00',
+      foto: null,
+      experiencia: 'Especialista em traumas e lesões esportivas.',
     ),
   ];
+
   List<_Profissional> get _filtrados {
     final query = _searchCtrl.text.toLowerCase();
-    if (query.isEmpty) return _profissionais;
-    return _profissionais
-        .where((p) =>
-            p.nome.toLowerCase().contains(query) ||
-            p.especialidade.toLowerCase().contains(query) ||
-            p.clinica.toLowerCase().contains(query))
-        .toList();
+    final dayOfWeek = _selectedDate.weekday;
+
+    return _profissionais.where((p) {
+      final matchesQuery = p.nome.toLowerCase().contains(query) ||
+          p.especialidade.toLowerCase().contains(query) ||
+          p.clinica.toLowerCase().contains(query);
+      final matchesDay = p.diasTrabalho.contains(dayOfWeek);
+      return matchesQuery && matchesDay;
+    }).toList();
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _logout() async {
-    await FirebaseAuth.instance.signOut();
-    try {
-      await GoogleSignIn().signOut();
-    } catch (_) {}
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      AppFadeRoute(page: const LoginCidadaoScreen()),
-    );
   }
 
   void _onAbaChanged(dynamic aba) {
@@ -131,18 +118,12 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
 
   Widget? _resolverAba(dynamic aba) {
     switch (aba) {
-      case DrawerAba.inicio:
-        return const HomeCidadaoScreen();
-      case DrawerAba.agendamentos:
-        return const CidadaoEscalaScreen();
-      case DrawerAba.fila:
-        return const CidadaoFilaScreen();
-      case DrawerAba.emergencia:
-        return const CidadaoEmergenciaScreen();
-      case DrawerAba.perfil:
-        return const PerfilScreen();
-      default:
-        return null;
+      case DrawerAba.inicio: return const HomeCidadaoScreen();
+      case DrawerAba.agendamentos: return const CidadaoEscalaScreen();
+      case DrawerAba.fila: return const CidadaoFilaScreen();
+      case DrawerAba.emergencia: return const CidadaoEmergenciaScreen();
+      case DrawerAba.perfil: return const PerfilScreen();
+      default: return null;
     }
   }
 
@@ -150,21 +131,19 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final isDesktop = w >= 700;
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: AppColors.bgBase,
-      drawer: isDesktop
-          ? null
-          : AppDrawer(
-              userName: _user?.displayName ?? 'Usuário',
-              userEmail: _user?.email ?? '',
-              userPhoto: _user?.photoURL,
-              abaAtual: _abaDestaScreen,
-              onAbaChanged: _onAbaChanged,
-              onLogout: _logout,
-            ),
+      drawer: isDesktop ? null : AppDrawer(
+        userName: _user?.displayName ?? 'Usuário',
+        userEmail: _user?.email ?? '',
+        userPhoto: _user?.photoURL,
+        abaAtual: _abaDestaScreen,
+        onAbaChanged: _onAbaChanged,
+        onLogout: () {},
+      ),
       body: isDesktop ? _buildDesktop() : _buildMobile(),
-      bottomNavigationBar: isDesktop ? null : _buildBottomNav(),
     );
   }
 
@@ -178,7 +157,7 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
           userPhoto: _user?.photoURL,
           abaAtual: _abaDestaScreen,
           onAbaChanged: _onAbaChanged,
-          onLogout: _logout,
+          onLogout: () {},
           isFixed: true,
         ),
       ),
@@ -186,9 +165,9 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       Expanded(
         child: Column(children: [
           AppHeader(
-            userName: _firstName,
+            userName: _user?.displayName?.split(' ').first ?? 'Usuário',
             userPhoto: _user?.photoURL,
-            onLogout: _logout,
+            onLogout: () {},
             onMenuPressed: null,
             onProfilePressed: () => _onAbaChanged(DrawerAba.perfil),
           ),
@@ -201,9 +180,9 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
   Widget _buildMobile() {
     return Column(children: [
       AppHeader(
-        userName: _firstName,
+        userName: _user?.displayName?.split(' ').first ?? 'Usuário',
         userPhoto: _user?.photoURL,
-        onLogout: _logout,
+        onLogout: () {},
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
         onProfilePressed: () => _onAbaChanged(DrawerAba.perfil),
       ),
@@ -211,203 +190,83 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
     ]);
   }
 
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.bgBase,
-        border: Border(top: BorderSide(color: AppColors.borderDim)),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: 1,
-        onTap: (i) {
-          const mapa = [
-            DrawerAba.inicio,
-            DrawerAba.agendamentos,
-            DrawerAba.fila,
-            DrawerAba.emergencia,
-            DrawerAba.perfil,
-          ];
-          _onAbaChanged(mapa[i]);
-        },
-        backgroundColor: AppColors.bgBase,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textTertiary,
-        selectedLabelStyle: const TextStyle(
-            fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600),
-        unselectedLabelStyle:
-            const TextStyle(fontFamily: 'Poppins', fontSize: 11),
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded), label: 'Início'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today_rounded), label: 'Agendas'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.groups_rounded), label: 'Fila'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.emergency_rounded), label: 'SOS'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded), label: 'Perfil'),
-        ],
-      ),
-    );
-  }
-
   Widget _buildConteudo() {
-    final width = MediaQuery.of(context).size.width;
-    final isSmall = width < 360;
-    final crossCount = width >= 600 ? 3 : 2;
-    final hPad = isSmall ? 14.0 : 16.0;
-    return Container(
-      color: AppColors.bgBase,
-      child: Column(
-        children: [
-          _buildTituloEFiltros(isSmall, hPad),
-          Expanded(
-            child: _filtrados.isEmpty
-                ? _buildEmpty()
-                : GridView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(hPad, 14, hPad, 24),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossCount,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.72,
-                    ),
-                    itemCount: _filtrados.length,
-                    itemBuilder: (_, i) => _buildDoctorGridCard(_filtrados[i]),
-                  ),
+    return Column(
+      children: [
+        _buildHeaderCalendar(),
+        Expanded(
+          child: _filtrados.isEmpty ? _buildEmpty() : ListView.separated(
+            padding: const EdgeInsets.all(20),
+            itemCount: _filtrados.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 20),
+            itemBuilder: (_, i) => _buildLargeScaleCard(_filtrados[i]),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildTituloEFiltros(bool isSmall, double hPad) {
+  Widget _buildHeaderCalendar() {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(hPad, 16, hPad, 14),
+      padding: const EdgeInsets.fromLTRB(20, 20, 0, 24),
       decoration: const BoxDecoration(
-        color: AppColors.bgBase,
-        border: Border(bottom: BorderSide(color: AppColors.borderDim)),
+        color: Colors.white,
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(32), bottomRight: Radius.circular(32)),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.calendar_month_rounded,
-                  color: AppColors.primary, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Escala Médica',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: isSmall ? 18 : 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-          ]),
-          const SizedBox(height: 14),
-          _buildSearchBar(isSmall),
-          const SizedBox(height: 12),
-          _buildFiltros(),
+          const Text(
+            'Escala de Atendimento',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+          ),
+          const Text(
+            'Selecione um dia para ver os médicos disponíveis.',
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 20),
+          _buildHorizontalCalendar(),
         ],
       ),
     );
   }
 
-  Widget _buildSearchBar(bool isSmall) {
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: AppColors.bgBase,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderDim),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _searchCtrl,
-              onChanged: (_) => setState(() {}),
-              style: const TextStyle(
-                  fontFamily: 'Poppins', fontSize: 13, color: AppColors.textPrimary),
-              decoration: const InputDecoration(
-                hintText: 'Buscar profissional...',
-                hintStyle: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: AppColors.textTertiary),
-                prefixIcon: Icon(Icons.search_rounded,
-                    size: 20, color: AppColors.textTertiary),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                filled: false,
-              ),
-            ),
-          ),
-          Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(12),
-                bottomRight: Radius.circular(12),
-              ),
-            ),
-            child: const Icon(Icons.tune_rounded, size: 18, color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFiltros() {
+  Widget _buildHorizontalCalendar() {
     return SizedBox(
-      height: 32,
+      height: 90,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: _filtros.length,
-        itemBuilder: (_, i) {
-          final sel = i == _filtroSelecionado;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => setState(() => _filtroSelecionado = i),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: sel ? AppColors.primary : AppColors.bgBase,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: sel ? AppColors.primary : AppColors.borderDim),
-                ),
-                child: Text(
-                  _filtros[i],
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 11,
-                    fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
-                    color: sel ? Colors.white : AppColors.textSecondary,
+        itemCount: 14, // Próximas 2 semanas
+        itemBuilder: (context, index) {
+          final date = DateTime.now().add(Duration(days: index));
+          final isSelected = DateFormat('yyyy-MM-dd').format(date) == DateFormat('yyyy-MM-dd').format(_selectedDate);
+          
+          final dayName = DateFormat('E', 'pt_BR').format(date).toUpperCase().replaceAll('.', '');
+          
+          return GestureDetector(
+            onTap: () => setState(() => _selectedDate = date),
+            child: Container(
+              width: 65,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary : AppColors.surfaceDim,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: isSelected ? AppColors.primary : AppColors.borderDim),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    dayName,
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isSelected ? Colors.white70 : AppColors.textSecondary),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat('d').format(date),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: isSelected ? Colors.white : AppColors.textPrimary),
+                  ),
+                ],
               ),
             ),
           );
@@ -416,255 +275,93 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
     );
   }
 
-  Widget _buildDoctorGridCard(_Profissional prof) {
-    return GestureDetector(
-      onTap: prof.disponivel ? () => _openAgendamento(prof) : null,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.bgBase,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.borderDim),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              flex: 5,
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: AppColors.bgBase,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(14),
-                    topRight: Radius.circular(14),
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Icon(Icons.person_rounded,
-                          size: 52, color: AppColors.primary.withOpacity(0.2)),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: prof.disponivel ? AppColors.success : AppColors.error,
-                          border: Border.all(color: AppColors.bgBase, width: 2),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      prof.nome,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      prof.especialidade,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        const Icon(Icons.star_rounded, size: 12, color: AppColors.warning),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${prof.rating}',
-                          style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildLargeScaleCard(_Profissional prof) {
+    final isNovoOriente = prof.clinica == 'UBS Novo Oriente';
 
-  void _openAgendamento(_Profissional prof) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _AgendamentoSheet(profissional: prof),
-    );
-  }
-
-  Widget _buildEmpty() {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.search_off_rounded, size: 48, color: AppColors.textTertiary),
-          SizedBox(height: 16),
-          Text(
-            'Nenhum profissional encontrado',
-            style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AgendamentoSheet extends StatefulWidget {
-  final _Profissional profissional;
-  const _AgendamentoSheet({required this.profissional});
-  @override
-  State<_AgendamentoSheet> createState() => _AgendamentoSheetState();
-}
-
-class _AgendamentoSheetState extends State<_AgendamentoSheet> {
-  String? _selectedTime;
-  final _motivoCtrl = TextEditingController();
-  final _horarios = [
-    '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'
-  ];
-  
-  @override
-  void dispose() {
-    _motivoCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height;
     return Container(
-      height: height * 0.92,
-      decoration: const BoxDecoration(
-        color: AppColors.bgBase,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
-      child: Column(
-        children: [
-          _buildSheetHeader(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildMedicoSelected(),
-                  const SizedBox(height: 24),
-                  _buildCalendar(),
-                  const SizedBox(height: 24),
-                  _buildHorarios(),
-                  const SizedBox(height: 24),
-                  _buildActionButtons(),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSheetHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
-      decoration: const BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 14),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: const Icon(Icons.close, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Agendar Consulta',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMedicoSelected() {
-    return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bgBase,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderDim),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isNovoOriente ? AppColors.primary.withOpacity(0.3) : AppColors.borderDim, width: isNovoOriente ? 1.5 : 1),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 8))],
       ),
-      child: Row(
+      child: Column(
         children: [
-          const CircleAvatar(
-            backgroundColor: AppColors.surfaceDim,
-            child: Icon(Icons.person, color: AppColors.primary),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.profissional.nome, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                Text(widget.profissional.especialidade, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(Icons.person_rounded, color: AppColors.primary, size: 35),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(prof.nome, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                          if (isNovoOriente)
+                            const Icon(Icons.verified_rounded, color: AppColors.primary, size: 20),
+                        ],
+                      ),
+                      Text(prof.especialidade, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on_rounded, size: 14, color: AppColors.textTertiary),
+                          const SizedBox(width: 4),
+                          Text(prof.clinica, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            color: AppColors.surfaceDim.withOpacity(0.5),
+            child: Column(
+              children: [
+                _buildInfoRow(Icons.access_time_filled_rounded, 'Horário de Plantão', prof.horario),
+                const SizedBox(height: 12),
+                _buildInfoRow(Icons.info_outline_rounded, 'Informações', prof.experiencia),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {},
+                    child: const Text('Ver Perfil Completo'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'DISPONÍVEL HOJE',
+                    style: TextStyle(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 11),
+                  ),
+                ),
               ],
             ),
           ),
@@ -673,61 +370,35 @@ class _AgendamentoSheetState extends State<_AgendamentoSheet> {
     );
   }
 
-  Widget _buildCalendar() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
       children: [
-        const Text('Selecione a Data', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.bgBase,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderDim),
+        Icon(icon, size: 16, color: AppColors.primary),
+        const SizedBox(width: 10),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(text: '$label: ', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary, fontFamily: 'Poppins')),
+                TextSpan(text: value, style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontFamily: 'Poppins')),
+              ],
+            ),
           ),
-          child: const Center(child: Text('Calendário de Disponibilidade', style: TextStyle(color: AppColors.textSecondary))),
         ),
       ],
     );
   }
 
-  Widget _buildHorarios() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Selecione o Horário', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _horarios.map((h) {
-            final sel = _selectedTime == h;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedTime = h),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: sel ? AppColors.primary : AppColors.bgBase,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: sel ? AppColors.primary : AppColors.borderDim),
-                ),
-                child: Text(h, style: TextStyle(color: sel ? Colors.white : AppColors.textPrimary, fontWeight: sel ? FontWeight.bold : FontWeight.normal)),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Consulta agendada!'), backgroundColor: AppColors.success));
-      },
-      child: const Text('CONFIRMAR AGENDAMENTO'),
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.event_busy_rounded, size: 60, color: AppColors.textTertiary.withOpacity(0.5)),
+          const SizedBox(height: 16),
+          const Text('Nenhum médico escalado para este dia.', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+        ],
+      ),
     );
   }
 }
@@ -739,6 +410,11 @@ class _Profissional {
   final double rating;
   final int totalAvaliacoes;
   final bool disponivel;
+  final List<int> diasTrabalho;
+  final String horario;
+  final String? foto;
+  final String experiencia;
+  
   _Profissional({
     required this.nome,
     required this.especialidade,
@@ -746,5 +422,9 @@ class _Profissional {
     required this.rating,
     required this.totalAvaliacoes,
     required this.disponivel,
+    required this.diasTrabalho,
+    required this.horario,
+    this.foto,
+    required this.experiencia,
   });
 }

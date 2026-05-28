@@ -142,9 +142,24 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen> {
             children: [
               _buildWelcomeSection(),
               const SizedBox(height: 24),
+              _buildFeaturedAppointment(),
+              const SizedBox(height: 32),
+              const Text(
+                'Serviços Principais',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
               _buildActionGrid(),
               const SizedBox(height: 32),
+              _buildExamsSection(),
+              const SizedBox(height: 32),
               _buildInfoSection(),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -153,27 +168,154 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen> {
   }
 
   Widget _buildWelcomeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final isDesktop = MediaQuery.of(context).size.width >= 700;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'Olá, ${_user?.displayName?.split(' ').first ?? 'Usuário'}!',
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Olá, ${_user?.displayName?.split(' ').first ?? 'Usuário'}!',
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Text(
+              'Como podemos ajudar você hoje?',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ),
-        const Text(
-          'Como podemos ajudar você hoje?',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            color: AppColors.textSecondary,
+        if (isDesktop)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.verified_user_rounded,
+                    color: AppColors.accent, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Cadastro Ativo',
+                  style: TextStyle(
+                    color: AppColors.accentDeep,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
       ],
+    );
+  }
+
+  Widget _buildFeaturedAppointment() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.calendar_month_rounded,
+                    color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 16),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Próximo Agendamento',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    'Segunda, 15 de Junho',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              const Icon(Icons.arrow_forward_ios_rounded,
+                  color: Colors.white, size: 16),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.medical_services_rounded,
+                      color: AppColors.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Consulta com Clínico Geral',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15),
+                      ),
+                      Text(
+                        'UBS Novo Oriente • 08:30h',
+                        style: TextStyle(
+                            color: Colors.white.withOpacity(0.8), fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -188,9 +330,9 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen> {
           label: 'Fila Virtual',
           onTap: () => _onAbaChanged(DrawerAba.fila)),
       _AcaoData(
-          icon: Icons.folder_outlined,
-          label: 'Meus Dados',
-          onTap: () => _onAbaChanged(DrawerAba.perfil)),
+          icon: Icons.assignment_rounded,
+          label: 'Guia de Exames',
+          onTap: () => _onAbaChanged(null)),
       _AcaoData(
           icon: Icons.emergency_rounded,
           label: 'Emergência',
@@ -258,35 +400,179 @@ class _HomeCidadaoScreenState extends State<HomeCidadaoScreen> {
     );
   }
 
+  Widget _buildExamsSection() {
+    final exames = [
+      {
+        'nome': 'Hemograma',
+        'data': '28 Mai',
+        'status': 'Disponível',
+        'icon': Icons.bloodtype_rounded
+      },
+      {
+        'nome': 'Raio-X Tórax',
+        'data': '20 Mai',
+        'status': 'Em análise',
+        'icon': Icons.person_search_rounded
+      },
+      {
+        'nome': 'Eletro',
+        'data': '15 Mai',
+        'status': 'Disponível',
+        'icon': Icons.monitor_heart_rounded
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Últimos Exames',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            Text(
+              'Ver todos',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 140,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: exames.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 16),
+            itemBuilder: (context, index) {
+              final exame = exames[index];
+              final isDisponivel = exame['status'] == 'Disponível';
+              return Container(
+                width: 160,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.borderDim),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(exame['icon'] as IconData,
+                        color: AppColors.primary, size: 24),
+                    const Spacer(),
+                    Text(
+                      exame['nome'] as String,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          exame['data'] as String,
+                          style: const TextStyle(
+                              fontSize: 11, color: AppColors.textSecondary),
+                        ),
+                        const Spacer(),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isDisponivel
+                                ? AppColors.success
+                                : AppColors.warning,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildInfoSection() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderDim),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Informativo Conecta Saúde',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: AppColors.primary,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.lightbulb_outline_rounded,
+                    color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Dica de Saúde',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 8),
-          Text(
-            'Mantenha seu cadastro sempre atualizado para facilitar o atendimento nas unidades de saúde.',
+          const SizedBox(height: 16),
+          const Text(
+            'Beba pelo menos 2 litros de água por dia para manter seu corpo hidratado e suas funções vitais em dia.',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 13,
               color: AppColors.textSecondary,
-              height: 1.5,
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () {},
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Saber mais',
+                  style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13),
+                ),
+                Icon(Icons.chevron_right_rounded,
+                    color: AppColors.primary, size: 18),
+              ],
             ),
           ),
         ],
