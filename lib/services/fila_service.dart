@@ -435,9 +435,30 @@ class FilaService {
 
   /// Adiciona um paciente fictício (botão de simulação no posto).
   Future<void> simularNovoPaciente() async {
-    final fakeId = 'sim_${DateTime.now().millisecondsSinceEpoch}';
+    final nomes = [
+      'Maria Silva Santos',
+      'João Pereira Oliveira',
+      'Ana Paula Souza',
+      'José Carlos Rodrigues',
+      'Francisca Ferreira',
+      'Antônio Marcos Lima',
+      'Adriana Barbosa',
+      'Paulo Roberto Costa',
+      'Juliana Mendes',
+      'Ricardo Almeida',
+      'Camila Oliveira',
+      'Fernando Henrique',
+      'Larissa Gomes',
+      'Marcelo Augusto',
+      'Beatriz Cavalcante',
+    ];
+
+    final random = DateTime.now().millisecondsSinceEpoch;
+    final nome = nomes[random % nomes.length];
+    
+    final fakeId = 'sim_$random';
     await entrarNaFila(
-      nome: 'Paciente Simulado',
+      nome: nome,
       especialidade: 'Clínica Geral',
       userId: fakeId,
     );

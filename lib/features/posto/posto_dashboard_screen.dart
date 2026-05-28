@@ -153,6 +153,8 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 24),
+                _OperationalStatus(),
+                SizedBox(height: 24),
                 _ActionGrid(),
                 SizedBox(height: 28),
                 _RecentActivity(),
@@ -205,7 +207,7 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
                       height: 1.2,
                     )),
                 const SizedBox(height: 2),
-                Text('Operação do Posto de Saúde',
+                Text('UBS Novo Oriente • Bola de Ouro',
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,
@@ -217,6 +219,107 @@ class _PostoDashboardScreenState extends State<PostoDashboardScreen>
           ),
         ],
       ),
+    );
+  }
+}
+
+class _OperationalStatus extends StatelessWidget {
+  const _OperationalStatus();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Operação da Unidade',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            )),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderDim),
+            boxShadow: const [
+              BoxShadow(color: Color(0x05000000), blurRadius: 10, offset: Offset(0, 4)),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  _statusBadge('Internet Conectada', Icons.wifi_rounded, AppColors.success),
+                  const Spacer(),
+                  const Text('Capacidade: 30 atendimentos/dia', 
+                    style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: AppColors.textSecondary)),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _staffItem(Icons.person_rounded, '1', 'Médico'),
+                  _staffItem(Icons.medical_services_rounded, '2', 'Enferm.'),
+                  _staffItem(Icons.badge_rounded, '1', 'Técnico'),
+                  _staffItem(Icons.timer_rounded, '15m', 'Alvo TMA'),
+                ],
+              ),
+              const SizedBox(height: 20),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: const LinearProgressIndicator(
+                  value: 0.73, // 22/30 conforme exemplo do plano
+                  backgroundColor: AppColors.surfaceMid,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  minHeight: 8,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('22 atendimentos realizados', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: AppColors.textSecondary)),
+                  Text('73%', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statusBadge(String label, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _staffItem(IconData icon, String value, String label) {
+    return Column(
+      children: [
+        Icon(icon, size: 20, color: AppColors.textTertiary),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        Text(label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: AppColors.textSecondary)),
+      ],
     );
   }
 }

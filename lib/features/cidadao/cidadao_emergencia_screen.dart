@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
 import '../../services/emergencia_service.dart';
@@ -231,7 +230,7 @@ class _CidadaoEmergenciaScreenState extends State<CidadaoEmergenciaScreen>
       child: const Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 28),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
               'Atenção: Use este canal apenas para emergências reais que necessitem de socorro médico.',

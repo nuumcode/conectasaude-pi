@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/animations/app_animations.dart';
 
 enum UserRole { cidadao, secretaria, posto }
 

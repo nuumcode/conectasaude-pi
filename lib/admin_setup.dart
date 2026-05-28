@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +15,7 @@ class _AdminSetupPageState extends State<AdminSetupPage> {
     setState(() => _status = 'Iniciando...');
     try {
       // UID encontrado no Auth: E2mjNlCAJQRl1O4t5UXzBNWduKy1
-      final uid = 'E2mjNlCAJQRl1O4t5UXzBNWduKy1';
+      const uid = 'E2mjNlCAJQRl1O4t5UXzBNWduKy1';
       final data = {
         'nome': 'CETIL',
         'perfil': 'admin',

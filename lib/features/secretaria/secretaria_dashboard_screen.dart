@@ -452,8 +452,8 @@ class _StatCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.borderDim),
-          boxShadow: [
-            const BoxShadow(
+          boxShadow: const [
+            BoxShadow(
               color: Color(0x05000000),
               blurRadius: 12,
               offset: Offset(0, 4),
@@ -701,11 +701,11 @@ class _DonutChart extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          _LegendItem('Cidadãos', AppColors.primary, '80%'),
+          const _LegendItem('Cidadãos', AppColors.primary, '80%'),
           const SizedBox(height: 5),
-          _LegendItem('Profissionais', AppColors.success, '15%'),
+          const _LegendItem('Profissionais', AppColors.success, '15%'),
           const SizedBox(height: 5),
-          _LegendItem('Admin', AppColors.warning, '5%'),
+          const _LegendItem('Admin', AppColors.warning, '5%'),
         ],
       ),
     );

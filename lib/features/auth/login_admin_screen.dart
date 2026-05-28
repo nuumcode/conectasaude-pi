@@ -450,7 +450,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
             gradient: _loading
                 ? null
                 : const LinearGradient(
-                    colors: [Color(0xFF1A72FF), Color(0xFF1AFFA4)],
+                    colors: [Color(0xFF1A72FF), Color(0xFF41F1F9)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),

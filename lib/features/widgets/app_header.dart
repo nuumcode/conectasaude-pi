@@ -150,8 +150,8 @@ class AppHeader extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           RichText(
-            text: TextSpan(children: [
-              const TextSpan(
+            text: const TextSpan(children: [
+              TextSpan(
                 text: 'Conecta\n',
                 style: TextStyle(
                     fontFamily: 'Poppins',
@@ -160,7 +160,7 @@ class AppHeader extends StatelessWidget {
                     color: Colors.white70,
                     height: 1.1),
               ),
-              const TextSpan(
+              TextSpan(
                 text: 'Saúde',
                 style: TextStyle(
                     fontFamily: 'Poppins',
@@ -168,7 +168,7 @@ class AppHeader extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     color: Colors.white),
               ),
-              const TextSpan(
+              TextSpan(
                 text: 'PI',
                 style: TextStyle(
                     fontFamily: 'Poppins',

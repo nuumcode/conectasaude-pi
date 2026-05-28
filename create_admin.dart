@@ -9,7 +9,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  final uid = 'E2mjNlCAJQRl1O4t5UXzBNWduKy1';
+  const uid = 'E2mjNlCAJQRl1O4t5UXzBNWduKy1';
   final data = {
     'nome': 'CETIL',
     'perfil': 'admin',

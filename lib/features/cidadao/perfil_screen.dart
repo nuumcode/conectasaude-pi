@@ -116,7 +116,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _PerfilEditSheet(),
+      builder: (_) => const _PerfilEditSheet(),
     );
     if (result == null) return;
     await _salvarPerfil(result);
@@ -840,7 +840,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: AppColors.primary,
+          activeThumbColor: AppColors.primary,
         ),
       ]),
     );
