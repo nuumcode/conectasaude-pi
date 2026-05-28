@@ -21,6 +21,7 @@ import 'package:conecta_saude_pi/features/secretaria/secretaria_dashboard_screen
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_wrapper.dart';
 import 'features/auth/login_cidadao_screen.dart';
@@ -38,6 +39,8 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await initializeDateFormatting('pt_BR', null);
 
   // ✅ Pré-carregamento global de assets críticos para evitar o "pisca" na logo
   // Fazemos isso antes do runApp para que no primeiro frame a logo já esteja pronta.

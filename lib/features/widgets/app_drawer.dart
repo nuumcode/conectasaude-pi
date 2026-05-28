@@ -219,7 +219,7 @@ class AppDrawer extends StatelessWidget {
       _buildItem(
         context,
         icon: Icons.groups_rounded,
-        label: 'Fila do Posto',
+        label: 'Gerenciamento de Fila',
         aba: DrawerAba.fila,
       ),
       const SizedBox(height: 16),

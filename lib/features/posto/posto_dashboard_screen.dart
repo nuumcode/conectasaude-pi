@@ -370,7 +370,7 @@ class _ActionGrid extends StatelessWidget {
                 _ActionCard(
                   width: cardW,
                   icon: Icons.groups_rounded,
-                  label: 'Fila do Posto',
+                  label: 'Gerenciamento de Fila',
                   color: AppColors.success,
                   onTap: () {
                     final state = context.findAncestorStateOfType<_PostoDashboardScreenState>();

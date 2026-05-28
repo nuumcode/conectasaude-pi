@@ -3,12 +3,11 @@ import 'package:conecta_saude_pi/features/cidadao/cidadao_emergencia_screen.dart
 import 'package:conecta_saude_pi/features/cidadao/perfil_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:conecta_saude_pi/features/auth/login_cidadao_screen.dart';
 import 'package:conecta_saude_pi/features/cidadao/dashboard_cidadao.dart';
 import 'package:conecta_saude_pi/features/widgets/app_drawer.dart';
 import 'package:conecta_saude_pi/features/widgets/app_header.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/animations/app_animations.dart';
 
@@ -36,8 +35,10 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       disponivel: true,
       diasTrabalho: [1, 3, 5], // Seg, Qua, Sex
       horario: '08:00 - 17:00',
-      foto: null,
+      foto: 'https://i.pravatar.cc/150?u=ricardo',
       experiencia: '15 anos de experiência em saúde da família.',
+      status: 'Atendendo agora',
+      crm: 'CRM/PI 12345',
     ),
     _Profissional(
       nome: 'Dra. Beatriz Santos',
@@ -48,8 +49,10 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       disponivel: true,
       diasTrabalho: [2, 4], // Ter, Qui
       horario: '07:00 - 13:00',
-      foto: null,
+      foto: 'https://i.pravatar.cc/150?u=beatriz',
       experiencia: 'Especialista em desenvolvimento infantil.',
+      status: 'Disponível',
+      crm: 'CRM/PI 54321',
     ),
     _Profissional(
       nome: 'Dr. Marcos Oliveira',
@@ -60,8 +63,10 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       disponivel: true,
       diasTrabalho: [3], // Quarta
       horario: '13:00 - 19:00',
-      foto: null,
+      foto: 'https://i.pravatar.cc/150?u=marcos',
       experiencia: 'Mestre em cardiologia preventiva.',
+      status: 'Em cirurgia',
+      crm: 'CRM/PI 98765',
     ),
     _Profissional(
       nome: 'Dra. Ana Costa',
@@ -72,8 +77,10 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       disponivel: true,
       diasTrabalho: [1, 2, 3, 4, 5],
       horario: '08:00 - 17:00',
-      foto: null,
+      foto: 'https://i.pravatar.cc/150?u=ana',
       experiencia: 'Atendimento humanizado à mulher.',
+      status: 'Atendendo agora',
+      crm: 'CRM/PI 11223',
     ),
     _Profissional(
       nome: 'Dr. João Pereira',
@@ -84,8 +91,10 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       disponivel: true,
       diasTrabalho: [5], // Sexta
       horario: '08:00 - 12:00',
-      foto: null,
+      foto: 'https://i.pravatar.cc/150?u=joao',
       experiencia: 'Especialista em traumas e lesões esportivas.',
+      status: 'Indisponível',
+      crm: 'CRM/PI 44556',
     ),
   ];
 
@@ -100,6 +109,12 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       final matchesDay = p.diasTrabalho.contains(dayOfWeek);
       return matchesQuery && matchesDay;
     }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _searchCtrl.addListener(() => setState(() {}));
   }
 
   @override
@@ -196,10 +211,10 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
         _buildHeaderCalendar(),
         Expanded(
           child: _filtrados.isEmpty ? _buildEmpty() : ListView.separated(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
             itemCount: _filtrados.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 20),
-            itemBuilder: (_, i) => _buildLargeScaleCard(_filtrados[i]),
+            separatorBuilder: (_, __) => const SizedBox(height: 16),
+            itemBuilder: (_, i) => _buildProfessionalCard(_filtrados[i]),
           ),
         ),
       ],
@@ -208,25 +223,77 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
 
   Widget _buildHeaderCalendar() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 0, 24),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(32), bottomRight: Radius.circular(32)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32), bottomRight: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Escala de Atendimento',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
-          ),
-          const Text(
-            'Selecione um dia para ver os médicos disponíveis.',
-            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Escala Virtual',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                    ),
+                    Text(
+                      DateFormat('MMMM yyyy', 'pt_BR').format(_selectedDate).toUpperCase(),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary, letterSpacing: 1.2),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceDim,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.filter_list_rounded, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           _buildHorizontalCalendar(),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              controller: _searchCtrl,
+              decoration: InputDecoration(
+                hintText: 'Buscar por médico ou especialidade...',
+                prefixIcon: const Icon(Icons.search_rounded, size: 22),
+                filled: true,
+                fillColor: AppColors.surfaceDim,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -234,38 +301,70 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
 
   Widget _buildHorizontalCalendar() {
     return SizedBox(
-      height: 90,
+      height: 95,
       child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
-        itemCount: 14, // Próximas 2 semanas
+        itemCount: 14,
         itemBuilder: (context, index) {
           final date = DateTime.now().add(Duration(days: index));
           final isSelected = DateFormat('yyyy-MM-dd').format(date) == DateFormat('yyyy-MM-dd').format(_selectedDate);
+          final isToday = DateFormat('yyyy-MM-dd').format(date) == DateFormat('yyyy-MM-dd').format(DateTime.now());
           
           final dayName = DateFormat('E', 'pt_BR').format(date).toUpperCase().replaceAll('.', '');
           
           return GestureDetector(
             onTap: () => setState(() => _selectedDate = date),
-            child: Container(
-              width: 65,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: 68,
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.surfaceDim,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: isSelected ? AppColors.primary : AppColors.borderDim),
+                gradient: isSelected ? AppColors.primaryGradient : null,
+                color: isSelected ? null : (isToday ? AppColors.primary.withOpacity(0.05) : Colors.white),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected ? Colors.transparent : (isToday ? AppColors.primary.withOpacity(0.2) : AppColors.borderDim),
+                  width: 1.5,
+                ),
+                boxShadow: isSelected ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ] : [],
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     dayName,
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isSelected ? Colors.white70 : AppColors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: isSelected ? Colors.white.withOpacity(0.8) : AppColors.textTertiary,
+                    ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     DateFormat('d').format(date),
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: isSelected ? Colors.white : AppColors.textPrimary),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                    ),
                   ),
+                  if (isToday)
+                    Container(
+                      margin: const EdgeInsets.top(4),
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.white : AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -275,113 +374,191 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
     );
   }
 
-  Widget _buildLargeScaleCard(_Profissional prof) {
-    final isNovoOriente = prof.clinica == 'UBS Novo Oriente';
-
+  Widget _buildProfessionalCard(_Profissional prof) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isNovoOriente ? AppColors.primary.withOpacity(0.3) : AppColors.borderDim, width: isNovoOriente ? 1.5 : 1),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 8))],
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.borderDim, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          )
+        ],
       ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(Icons.person_rounded, color: AppColors.primary, size: 35),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Stack(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(prof.nome, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                          if (isNovoOriente)
-                            const Icon(Icons.verified_rounded, color: AppColors.primary, size: 20),
-                        ],
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(22),
+                          color: AppColors.surfaceDim,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(22),
+                          child: prof.foto != null 
+                            ? CachedNetworkImage(
+                                imageUrl: prof.foto!,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                errorWidget: (context, url, error) => const Icon(Icons.person_rounded, color: AppColors.textTertiary, size: 40),
+                              )
+                            : const Icon(Icons.person_rounded, color: AppColors.textTertiary, size: 40),
+                        ),
                       ),
-                      Text(prof.especialidade, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary)),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on_rounded, size: 14, color: AppColors.textTertiary),
-                          const SizedBox(width: 4),
-                          Text(prof.clinica, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
-                        ],
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          width: 18,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: prof.status == 'Atendendo agora' ? AppColors.success : (prof.status == 'Indisponível' ? AppColors.error : AppColors.warning),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            color: AppColors.surfaceDim.withOpacity(0.5),
-            child: Column(
-              children: [
-                _buildInfoRow(Icons.access_time_filled_rounded, 'Horário de Plantão', prof.horario),
-                const SizedBox(height: 12),
-                _buildInfoRow(Icons.info_outline_rounded, 'Informações', prof.experiencia),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    child: const Text('Ver Perfil Completo'),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              prof.nome,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.verified_rounded, color: AppColors.primary, size: 18),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          prof.especialidade.toUpperCase(),
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary, letterSpacing: 0.5),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            _buildRatingBadge(prof.rating),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${prof.totalAvaliacoes} avaliações',
+                              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'DISPONÍVEL HOJE',
-                    style: TextStyle(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 11),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceDim.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  _buildIconText(Icons.location_on_rounded, prof.clinica, isBold: true),
+                  const SizedBox(height: 10),
+                  _buildIconText(Icons.access_time_rounded, 'Plantão: ${prof.horario}'),
+                  const SizedBox(height: 10),
+                  _buildIconText(Icons.badge_rounded, prof.crm),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text('Solicitar Agendamento'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    height: 52,
+                    width: 52,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(Icons.info_outline_rounded, color: AppColors.primary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRatingBadge(double rating) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star_rounded, color: AppColors.warning, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            rating.toString(),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppColors.warning),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildIconText(IconData icon, String text, {bool isBold = false}) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppColors.primary),
+        Icon(icon, size: 16, color: AppColors.textSecondary),
         const SizedBox(width: 10),
         Expanded(
-          child: RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(text: '$label: ', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary, fontFamily: 'Poppins')),
-                TextSpan(text: value, style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontFamily: 'Poppins')),
-              ],
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 13, 
+              color: AppColors.textPrimary, 
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
         ),
@@ -394,9 +571,25 @@ class _CidadaoEscalaScreenState extends State<CidadaoEscalaScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.event_busy_rounded, size: 60, color: AppColors.textTertiary.withOpacity(0.5)),
-          const SizedBox(height: 16),
-          const Text('Nenhum médico escalado para este dia.', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceDim,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.event_busy_rounded, size: 48, color: AppColors.textTertiary.withOpacity(0.5)),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Nenhum médico escalado',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Tente selecionar outra data ou\naltere sua busca.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+          ),
         ],
       ),
     );
@@ -414,6 +607,8 @@ class _Profissional {
   final String horario;
   final String? foto;
   final String experiencia;
+  final String status;
+  final String crm;
   
   _Profissional({
     required this.nome,
@@ -426,5 +621,7 @@ class _Profissional {
     required this.horario,
     this.foto,
     required this.experiencia,
+    required this.status,
+    required this.crm,
   });
 }
